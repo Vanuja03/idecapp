@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Backend build
+backend/dist/
+backend/coverage/
+
+# Expo / mobile
+IDEC/.expo/
+IDEC/dist/
+IDEC/web-build/
+IDEC/expo-env.d.ts
+IDEC/ios/
+IDEC/android/
+IDEC/.kotlin/
+
+# Logs and debug
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.pem
+
+# TypeScript
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+.nyc_output/
