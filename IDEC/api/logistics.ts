@@ -1,5 +1,12 @@
 import { api } from '@/api/client';
-import { AuthUser, DailyView, Job, JobStatus, Vehicle } from '@/types';
+import { AuthUser, CompletedByVehicleAnalytics, DailyView, Job, JobStatus, Vehicle } from '@/types';
+
+export async function getCompletedByVehicle(period: 'week' | 'month', date: string) {
+  const { data } = await api.get<{ data: CompletedByVehicleAnalytics }>('/analytics/completed-by-vehicle', {
+    params: { period, date },
+  });
+  return data.data;
+}
 
 export async function loginRequest(username: string, password: string) {
   const { data } = await api.post<{ data: { token: string; user: AuthUser } }>('/auth/login', {

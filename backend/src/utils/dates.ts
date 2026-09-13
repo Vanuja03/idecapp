@@ -39,6 +39,37 @@ export function todayInTimezone(timeZone = env.appTimezone): string {
   return `${year}-${month}-${day}`;
 }
 
+export function addDaysToBusinessDate(date: string, amount: number): string {
+  assertBusinessDate(date);
+  const [year, month, day] = date.split('-').map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day + amount));
+  const y = utc.getUTCFullYear();
+  const m = String(utc.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(utc.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Monday–Sunday week that contains `date`. */
+export function weekRangeContaining(date: string): { from: string; to: string } {
+  assertBusinessDate(date);
+  const [year, month, day] = date.split('-').map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  const weekday = utc.getUTCDay(); // 0 Sun … 6 Sat
+  const offsetToMonday = weekday === 0 ? -6 : 1 - weekday;
+  const from = addDaysToBusinessDate(date, offsetToMonday);
+  const to = addDaysToBusinessDate(from, 6);
+  return { from, to };
+}
+
+export function monthRangeContaining(date: string): { from: string; to: string } {
+  assertBusinessDate(date);
+  const [year, month] = date.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const from = `${year}-${String(month).padStart(2, '0')}-01`;
+  const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  return { from, to };
+}
+
 export function formatDateTimeInTimezone(
   date: Date,
   timeZone = env.appTimezone,

@@ -98,7 +98,7 @@ CORS_ORIGIN=*
 | operator | Operator@123 | OPERATOR |
 | viewer | Viewer@123 | VIEWER |
 
-Vehicles: `ABC-1234`, `XYZ-5678`, `LMN-9012`.
+Vehicles: `JR-8000` (20"), `LJ-0980` (40"), and the remaining lorries as Other lorry.
 
 These passwords are **development-only**. Change or remove them before production.
 

@@ -1,17 +1,12 @@
 import { Redirect, Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { BrandSplash } from '@/components/BrandSplash';
 import { useAuth } from '@/store/auth';
-import { palette } from '@/constants/theme';
 
 export default function AppLayout() {
   const { user, bootstrapping } = useAuth();
 
   if (bootstrapping) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={palette.navy} />
-      </View>
-    );
+    return <BrandSplash />;
   }
 
   if (!user) {

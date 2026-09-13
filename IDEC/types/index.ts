@@ -78,6 +78,19 @@ export type DailyView = {
   jobs: Job[];
 };
 
+export type TruckCompletedCount = {
+  vehicleNumber: string;
+  completed: number;
+};
+
+export type CompletedByVehicleAnalytics = {
+  period: 'week' | 'month';
+  from: string;
+  to: string;
+  hires: number;
+  trucks: TruckCompletedCount[];
+};
+
 export type ApiSuccess<T> = {
   success: true;
   data: T;

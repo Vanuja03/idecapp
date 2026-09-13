@@ -31,6 +31,52 @@ export function addDays(date: string, amount: number): string {
   return toBusinessDate(parsed);
 }
 
+export function weekRangeContaining(date: string): { from: string; to: string } {
+  const parsed = parseBusinessDate(date);
+  const weekday = parsed.getDay();
+  const offsetToMonday = weekday === 0 ? -6 : 1 - weekday;
+  const from = addDays(date, offsetToMonday);
+  return { from, to: addDays(from, 6) };
+}
+
+export function monthRangeContaining(date: string): { from: string; to: string } {
+  const parsed = parseBusinessDate(date);
+  const from = toBusinessDate(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
+  const to = toBusinessDate(new Date(parsed.getFullYear(), parsed.getMonth() + 1, 0));
+  return { from, to };
+}
+
+export function shiftPeriod(date: string, period: 'week' | 'month', direction: -1 | 1): string {
+  if (period === 'week') {
+    return addDays(date, direction * 7);
+  }
+  const parsed = parseBusinessDate(date);
+  parsed.setMonth(parsed.getMonth() + direction);
+  return toBusinessDate(parsed);
+}
+
+export function formatWeekRange(from: string, to: string): string {
+  const start = parseBusinessDate(from).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  });
+  const end = parseBusinessDate(to).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return `${start} – ${end}`;
+}
+
+export function formatMonthYear(date: string): string {
+  return parseBusinessDate(date).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 export function formatDisplayDate(date: string): string {
   return parseBusinessDate(date).toLocaleDateString('en-US', {
     month: 'long',

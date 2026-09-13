@@ -7,6 +7,7 @@ import {
   finalizeDayRequest,
   getDailyJobs,
   getJob,
+  getCompletedByVehicle,
   listUsersRequest,
   listVehiclesRequest,
   setUserStatusRequest,
@@ -20,6 +21,14 @@ import { useAuth } from '@/store/auth';
 
 export function useCurrentUser() {
   return useAuth().user;
+}
+
+export function useCompletedByVehicle(period: 'week' | 'month', date: string) {
+  return useQuery({
+    queryKey: ['analytics', 'completed-by-vehicle', period, date],
+    queryFn: () => getCompletedByVehicle(period, date),
+    enabled: Boolean(date),
+  });
 }
 
 export function useDailyJobs(date: string) {

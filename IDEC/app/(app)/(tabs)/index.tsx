@@ -3,7 +3,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DailySummary } from '@/components/DailySummary';
+import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
+import { JobCard } from '@/components/JobCard';
 import { LoadingState } from '@/components/LoadingState';
 import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useFinalizeDay } from '@/hooks/use-logistics';
@@ -52,6 +54,23 @@ export default function DashboardScreen() {
         ) : null}
       </View>
 
+      {data ? (
+        <View style={styles.list}>
+          <Text style={styles.listTitle}>Today's job list</Text>
+          {data.jobs.length === 0 ? (
+            <EmptyState title="No jobs found." message="Create a job for today if the day is still OPEN." />
+          ) : (
+            data.jobs.map((job) => (
+              <JobCard
+                key={job._id}
+                job={job}
+                onPress={() => router.push({ pathname: '/(app)/jobs/[id]', params: { id: job._id } })}
+              />
+            ))
+          )}
+        </View>
+      ) : null}
+
       <ConfirmDialog
         visible={confirm}
         title={`Finalize ${formatDisplayDate(today)}?`}
@@ -78,4 +97,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '800', color: palette.navy },
   date: { color: palette.steel, fontWeight: '600' },
   actions: { gap: spacing.sm, marginTop: spacing.md },
+  list: { gap: spacing.sm, marginTop: spacing.md, paddingBottom: spacing.xl },
+  listTitle: { fontSize: 16, fontWeight: '800', color: palette.navy },
 });

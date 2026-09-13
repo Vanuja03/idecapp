@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import analyticsRoutes from './routes/analyticsRoutes';
 import authRoutes from './routes/authRoutes';
 import dailyJobRoutes from './routes/dailyJobRoutes';
 import jobRoutes from './routes/jobRoutes';
@@ -31,6 +32,7 @@ export function createApp() {
     res.json({ success: true, data: { status: 'ok' }, message: 'Healthy' });
   });
 
+  app.use('/api/analytics', analyticsRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/vehicles', vehicleRoutes);

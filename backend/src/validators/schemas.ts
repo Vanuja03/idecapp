@@ -83,3 +83,8 @@ export const vehiclesQuerySchema = z.object({
     .optional()
     .transform((value) => (value === undefined ? undefined : value === 'true')),
 });
+
+export const analyticsQuerySchema = z.object({
+  period: z.enum(['week', 'month']),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD').optional(),
+});

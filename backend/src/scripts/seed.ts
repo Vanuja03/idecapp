@@ -17,10 +17,23 @@ const DEV_USERS = [
 ];
 
 const DEV_VEHICLES = [
-  { vehicleNumber: 'ABC-1234', description: '10 Ton Truck' },
-  { vehicleNumber: 'XYZ-5678', description: '14 Ton Truck' },
-  { vehicleNumber: 'LMN-9012', description: '18 Ton Truck' },
+  { vehicleNumber: 'LY-1547', description: 'Other lorry' },
+  { vehicleNumber: 'LY-3589', description: 'Other lorry' },
+  { vehicleNumber: 'LY-3905', description: 'Other lorry' },
+  { vehicleNumber: 'LY-3906', description: 'Other lorry' },
+  { vehicleNumber: 'LY-4425', description: 'Other lorry' },
+  { vehicleNumber: 'LY-4426', description: 'Other lorry' },
+  { vehicleNumber: 'LY-1607', description: 'Other lorry' },
+  { vehicleNumber: 'LY-4469', description: 'Other lorry' },
+  { vehicleNumber: 'JR-8000', description: '20"' },
+  { vehicleNumber: 'LJ-0980', description: '40"' },
+  { vehicleNumber: 'LY-4241', description: 'Other lorry' },
+  { vehicleNumber: 'LY-5403', description: 'Other lorry' },
+  { vehicleNumber: 'LY-4499', description: 'Other lorry' },
+  { vehicleNumber: 'LI-3547', description: 'Other lorry' },
 ];
+
+const REMOVED_DEMO_VEHICLES = ['ABC-1234', 'XYZ-5678', 'LMN-9012'];
 
 async function seed() {
   await connectDatabase();
@@ -42,14 +55,15 @@ async function seed() {
     logger.info({ username: item.username, role: item.role }, 'Seeded user (DEV PASSWORD — change in production)');
   }
 
+  await Vehicle.deleteMany({ vehicleNumber: { $in: REMOVED_DEMO_VEHICLES } });
+
   for (const item of DEV_VEHICLES) {
-    const existing = await Vehicle.findOne({ vehicleNumber: item.vehicleNumber });
-    if (existing) {
-      logger.info({ vehicleNumber: item.vehicleNumber }, 'Vehicle already exists');
-      continue;
-    }
-    await Vehicle.create({ ...item, isActive: true });
-    logger.info({ vehicleNumber: item.vehicleNumber }, 'Seeded vehicle');
+    await Vehicle.findOneAndUpdate(
+      { vehicleNumber: item.vehicleNumber },
+      { $set: { vehicleNumber: item.vehicleNumber, description: item.description, isActive: true } },
+      { upsert: true, new: true },
+    );
+    logger.info({ vehicleNumber: item.vehicleNumber, description: item.description }, 'Seeded vehicle');
   }
 
   logger.info('Seed complete. Do not use these passwords in production.');

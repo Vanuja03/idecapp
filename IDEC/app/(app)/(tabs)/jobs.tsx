@@ -61,7 +61,13 @@ export default function DailyJobsScreen() {
         }
       />
       {canAdd ? (
-        <FAB icon="plus" label="Add Job" style={styles.fab} onPress={() => router.push({ pathname: '/(app)/jobs/create', params: { date } })} />
+        <FAB
+          icon="plus"
+          label="Add Job"
+          color="#fff"
+          style={styles.fab}
+          onPress={() => router.push({ pathname: '/(app)/jobs/create', params: { date } })}
+        />
       ) : null}
       <ConfirmDialog
         visible={confirm}
