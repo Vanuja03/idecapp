@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { FAB, Snackbar } from 'react-native-paper';
+import { Button, FAB, Snackbar } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DailySummary } from '@/components/DailySummary';
 import { DateSelector } from '@/components/DateSelector';
@@ -12,6 +12,7 @@ import { JobCard } from '@/components/JobCard';
 import { LoadingState } from '@/components/LoadingState';
 import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useFinalizeDay } from '@/hooks/use-logistics';
+import { downloadDailyJobsPdf } from '@/services/downloadDailyPdf';
 import { useAuth } from '@/store/auth';
 import { formatDisplayDate, todayBusinessDate } from '@/utils/dates';
 import { getErrorMessage } from '@/utils/errors';
@@ -24,8 +25,22 @@ export default function DailyJobsScreen() {
   const finalize = useFinalizeDay();
   const [confirm, setConfirm] = useState(false);
   const [snack, setSnack] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const isOpen = data?.status === 'OPEN';
+  const isFinalized = data?.status === 'FINALIZED';
   const canAdd = canCreateJob(user?.role) && isOpen;
+
+  const onDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      await downloadDailyJobsPdf(date);
+      setSnack('PDF ready');
+    } catch (err) {
+      setSnack(getErrorMessage(err, 'Unable to download the PDF report.'));
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -47,6 +62,19 @@ export default function DailyJobsScreen() {
             {data ? <DailySummary day={data} /> : null}
             {canFinalize(user?.role) ? (
               <FinalizeButton visible={Boolean(isOpen)} loading={finalize.isPending} onPress={() => setConfirm(true)} />
+            ) : null}
+            {isFinalized ? (
+              <Button
+                mode="contained"
+                icon="file-pdf-box"
+                onPress={onDownloadPdf}
+                loading={downloading}
+                disabled={downloading}
+                buttonColor={palette.navy}
+                textColor="#fff"
+              >
+                Download PDF
+              </Button>
             ) : null}
           </View>
         }

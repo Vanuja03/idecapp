@@ -11,6 +11,12 @@ const auth = asyncHandler(authenticate);
 
 router.use(auth);
 router.get(
+  '/:date/pdf',
+  requirePermission(Permission.JOB_VIEW),
+  validate(dateParamSchema, 'params'),
+  dailyJobController.downloadPdf,
+);
+router.get(
   '/:date',
   requirePermission(Permission.JOB_VIEW),
   validate(dateParamSchema, 'params'),
