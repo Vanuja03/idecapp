@@ -4,7 +4,7 @@
     "slug": "IDEC",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/images/idec-logo-transparent.png",
+    "icon": "./assets/images/idec_icon.png",
     "scheme": "idec",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

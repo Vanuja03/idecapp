@@ -133,5 +133,12 @@ const styles = StyleSheet.create({
   },
   periodKind: { color: palette.muted, fontSize: 11, fontWeight: '700' },
   periodLabel: { color: palette.navy, fontSize: 16, fontWeight: '800' },
-  chart: { flex: 1, backgroundColor: palette.card, borderRadius: 12, borderWidth: 1, borderColor: palette.border },
+  chart: {
+    flex: 1,
+    backgroundColor: palette.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.border,
+    marginBottom: spacing.sm,
+  },
 });

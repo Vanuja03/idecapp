@@ -1,8 +1,14 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette } from '@/constants/theme';
 
+const TAB_BAR_CONTENT_HEIGHT = 56;
+
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 8);
+
   return (
     <Tabs
       screenOptions={{
@@ -10,8 +16,15 @@ export default function TabsLayout() {
         headerTintColor: '#fff',
         tabBarActiveTintColor: palette.navy,
         tabBarInactiveTintColor: palette.muted,
-        tabBarStyle: { height: 64, paddingBottom: 8, paddingTop: 8 },
+        tabBarStyle: {
+          height: TAB_BAR_CONTENT_HEIGHT + bottomPadding,
+          paddingTop: 8,
+          paddingBottom: bottomPadding,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
         tabBarLabelStyle: { fontWeight: '700' },
+        sceneStyle: { paddingLeft: insets.left, paddingRight: insets.right },
       }}
     >
       <Tabs.Screen

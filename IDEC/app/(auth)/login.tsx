@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
   Dimensions,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
   StyleSheet,
@@ -28,6 +28,25 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const keyboardOpen = keyboardHeight > 0;
+
+  useEffect(() => {
+    // Android edge-to-edge doesn't resize the window, so offset by the keyboard ourselves
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const {
     control,
     handleSubmit,
@@ -56,23 +75,27 @@ export default function LoginScreen() {
         />
       </View>
 
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.flex}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={[
             styles.scroll,
             {
-              paddingTop: insets.top + 24,
-              paddingBottom: Math.max(insets.bottom, 16) + 8,
+              paddingTop: insets.top + (keyboardOpen ? 12 : 24),
+              paddingBottom: keyboardOpen ? keyboardHeight + 12 : Math.max(insets.bottom, 16) + 8,
             },
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.topSpace} />
+          <View style={[styles.topSpace, keyboardOpen && styles.topSpaceCompact]} />
 
           <View style={styles.card}>
-            <LinearGradient colors={['#0F3D6E', '#2E6FA8']} style={styles.waveHeader}>
-              <Image source={logoImage} style={styles.logo} resizeMode="cover" />
+            <LinearGradient
+              colors={['#0F3D6E', '#2E6FA8']}
+              style={[styles.waveHeader, keyboardOpen && styles.waveHeaderCompact]}
+            >
+              {keyboardOpen ? null : <Image source={logoImage} style={styles.logo} resizeMode="cover" />}
               <Text style={styles.brand}>Idec</Text>
               <Text style={styles.brandSub}>Logistics & Trading Co.</Text>
               <View style={styles.waveCurve} />
@@ -160,7 +183,7 @@ export default function LoginScreen() {
             </View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
     </LinearGradient>
   );
 }
@@ -190,6 +213,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minHeight: 160,
   },
+  topSpaceCompact: {
+    minHeight: 0,
+  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 32,
@@ -207,6 +233,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl + 22,
     position: 'relative',
+  },
+  waveHeaderCompact: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg + 18,
   },
   waveCurve: {
     position: 'absolute',
