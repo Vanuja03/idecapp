@@ -1,4 +1,4 @@
-import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { palette } from '@/constants/theme';
 
 const logo = require('../assets/images/idec-logo.jpg');
@@ -13,6 +13,7 @@ export function BrandSplash({ fullscreen = true }: Props) {
       <View style={styles.logoFrame}>
         <Image source={logo} style={styles.logo} resizeMode="cover" />
       </View>
+      <Text style={styles.title}>IDEC</Text>
       <ActivityIndicator color={palette.navy} style={styles.spinner} />
     </View>
   );
@@ -22,11 +23,11 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 24,
+    gap: 16,
   },
   fullscreen: {
     flex: 1,
-    backgroundColor: '#F3F8FD',
+    backgroundColor: '#FFFFFF',
   },
   logoFrame: {
     width: 220,
@@ -43,6 +44,12 @@ const styles = StyleSheet.create({
   logo: {
     width: '100%',
     height: '100%',
+  },
+  title: {
+    color: '#000000',
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: 2,
   },
   spinner: {
     marginTop: 4,
