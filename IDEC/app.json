@@ -16,7 +16,7 @@
       "package": "com.idec.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/idec-logo-transparent.png"
+        "foregroundImage": "./assets/images/idec_icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
