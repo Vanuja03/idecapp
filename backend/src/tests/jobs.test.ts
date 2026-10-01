@@ -149,7 +149,7 @@ describe('Jobs', () => {
     expect(res.body.data.job.notes).toBe('Perera Transport');
   });
 
-  it('rejects an other lorry job without a lorry number', async () => {
+  it('rejects an other lorry job without a lorry number or vendor', async () => {
     const { Authorization } = await authHeader(UserRole.OPERATOR);
     const res = await request(app)
       .post('/api/jobs')
@@ -159,10 +159,12 @@ describe('Jobs', () => {
         vehicleSource: 'OTHER',
         destination: 'Colombo',
         status: 'PENDING',
+        notes: '  ',
       });
 
     expect(res.status).toBe(400);
     expect(res.body.errors.otherVehicleNumber).toBeTruthy();
+    expect(res.body.errors.notes).toBe('Vendor is required');
   });
 
   it('does not allow changing the lorry type after creation', async () => {
@@ -181,6 +183,7 @@ describe('Jobs', () => {
         otherVehicleNumber: 'TMP-1',
         destination: 'Galle',
         status: 'PENDING',
+        notes: 'Perera Transport',
       });
 
     const ownToOther = await request(app)
@@ -209,7 +212,15 @@ describe('Jobs', () => {
         otherVehicleNumber: 'TMP-1',
         destination: 'Galle',
         status: 'PENDING',
+        notes: 'Perera Transport',
       });
+
+    const clearedVendor = await request(app)
+      .put(`/api/jobs/${created.body.data.job._id}`)
+      .set('Authorization', Authorization)
+      .send({ notes: '   ' });
+    expect(clearedVendor.status).toBe(400);
+    expect(clearedVendor.body.errors.notes).toBeTruthy();
 
     const updated = await request(app)
       .put(`/api/jobs/${created.body.data.job._id}`)
@@ -231,7 +242,7 @@ describe('Jobs', () => {
     await request(app)
       .post('/api/jobs')
       .set('Authorization', Authorization)
-      .send({ ...base, vehicleSource: 'OTHER', otherVehicleNumber: 'TMP-9' });
+      .send({ ...base, vehicleSource: 'OTHER', otherVehicleNumber: 'TMP-9', notes: 'Perera Transport' });
 
     const res = await request(app)
       .get('/api/analytics/completed-by-vehicle?period=week&date=2026-08-11')

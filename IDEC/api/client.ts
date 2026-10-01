@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { clearToken, getToken } from '@/services/secureToken';
 
-const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.8.140:5000/api';
+const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.ideclogistics.com/api';
 
 export const api = axios.create({
   baseURL,

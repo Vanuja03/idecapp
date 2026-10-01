@@ -27,6 +27,9 @@ export const jobSchema = z
         message: 'Enter the lorry number',
       });
     }
+    if (data.vehicleSource === VehicleSource.OTHER && !data.notes?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['notes'], message: 'Enter the vendor' });
+    }
   });
 
 export function jobFormToPayload(values: JobForm): JobPayload {

@@ -78,6 +78,9 @@ export const createJobSchema = z
         message: 'Lorry number is required',
       });
     }
+    if (data.vehicleSource === VehicleSource.OTHER && !data.notes?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['notes'], message: 'Vendor is required' });
+    }
   });
 
 export const updateJobSchema = z

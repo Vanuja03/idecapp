@@ -125,10 +125,12 @@ export default function CreateJobScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
+            error={isOtherLorry && Boolean(errors.notes)}
             disabled={locked}
           />
         )}
       />
+      {isOtherLorry && errors.notes ? <Text style={styles.error}>{errors.notes.message}</Text> : null}
 
       <Button mode="contained" onPress={onSubmit} loading={isSubmitting} disabled={isSubmitting || locked}>
         Save Job

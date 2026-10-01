@@ -145,10 +145,14 @@ export default function JobDetailScreen() {
             multiline
             value={value}
             onChangeText={onChange}
+            error={isOtherLorry && Boolean(form.formState.errors.notes)}
             disabled={!canEdit}
           />
         )}
       />
+      {isOtherLorry && form.formState.errors.notes ? (
+        <Text style={styles.error}>{form.formState.errors.notes.message}</Text>
+      ) : null}
 
       {canEdit ? (
         <Button mode="contained" onPress={onSave} loading={updateJob.isPending}>
@@ -190,4 +194,5 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, backgroundColor: palette.surface },
   meta: { color: palette.muted },
   date: { fontWeight: '700', color: palette.navy },
+  error: { color: palette.error },
 });

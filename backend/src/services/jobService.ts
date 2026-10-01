@@ -133,6 +133,10 @@ export async function updateJob(
     });
   }
 
+  if (source === VehicleSource.OTHER && input.notes !== undefined && !input.notes.trim()) {
+    throw new AppError('Vendor is required', 400, 'VALIDATION_ERROR', { notes: 'Vendor is required' });
+  }
+
   const vehicleInputGiven =
     source === VehicleSource.OWN ? Boolean(input.vehicleId) : Boolean(input.otherVehicleNumber);
   if (vehicleInputGiven) {
