@@ -16,7 +16,7 @@ import {
   updateUserRequest,
   updateVehicleRequest,
 } from '@/api/logistics';
-import { JobStatus } from '@/types';
+import { JobPayload } from '@/types';
 import { useAuth } from '@/store/auth';
 
 export function useCurrentUser() {
@@ -87,7 +87,7 @@ export function useUpdateJob() {
       payload,
     }: {
       id: string;
-      payload: Partial<{ jobDate: string; vehicleId: string; destination: string; status: JobStatus; notes: string }>;
+      payload: Partial<JobPayload>;
     }) => updateJobRequest(id, payload),
     onSuccess: (job) => invalidate(job.jobDate),
   });

@@ -13,6 +13,15 @@ export function todayBusinessDate(timeZone = APP_TIMEZONE): string {
   return `${year}-${month}-${day}`;
 }
 
+export function greetingForNow(timeZone = APP_TIMEZONE): string {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(new Date()),
+  );
+  if (hour < 12) return 'Good morning';
+  if (hour < 16) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function parseBusinessDate(date: string): Date {
   const [year, month, day] = date.split('-').map(Number);
   return new Date(year, month - 1, day);

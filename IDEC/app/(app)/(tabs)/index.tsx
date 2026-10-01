@@ -10,10 +10,10 @@ import { LoadingState } from '@/components/LoadingState';
 import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useFinalizeDay } from '@/hooks/use-logistics';
 import { useAuth } from '@/store/auth';
-import { formatDisplayDate, todayBusinessDate } from '@/utils/dates';
+import { formatDisplayDate, greetingForNow, todayBusinessDate } from '@/utils/dates';
 import { getErrorMessage } from '@/utils/errors';
 import { canCreateJob, canFinalize } from '@/utils/permissions';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function DashboardScreen() {
   const { user } = useAuth();
@@ -21,10 +21,18 @@ export default function DashboardScreen() {
   const { data, isLoading, isError, refetch, error } = useDailyJobs(today);
   const finalize = useFinalizeDay();
   const [confirm, setConfirm] = useState(false);
+  const [greeting, setGreeting] = useState(greetingForNow);
+
+  useEffect(() => {
+    const timer = setInterval(() => setGreeting(greetingForNow()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.hello}>Hello, {user?.name}</Text>
+      <Text style={styles.hello}>
+        {greeting}, {user?.name}
+      </Text>
       <Text style={styles.title}>Today's Jobs</Text>
       <Text style={styles.date}>{formatDisplayDate(today)}</Text>
 

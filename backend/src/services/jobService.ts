@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Job } from '../models/Job';
 import { Vehicle } from '../models/Vehicle';
-import { JobStatus } from '../types';
+import { JobStatus, VehicleSource } from '../types';
 import { AppError } from '../utils/AppError';
 import { assertBusinessDate } from '../utils/dates';
 import { assertDayIsOpen, getOrCreateDayControl } from './dailyJobService';
@@ -28,6 +28,28 @@ async function resolveActiveVehicle(vehicleId: string) {
   return vehicle;
 }
 
+function normalizeOtherVehicleNumber(value: string) {
+  return value.trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+async function resolveVehicleFields(source: VehicleSource, vehicleId?: string, otherVehicleNumber?: string) {
+  if (source === VehicleSource.OTHER) {
+    const number = otherVehicleNumber ? normalizeOtherVehicleNumber(otherVehicleNumber) : '';
+    if (!number) {
+      throw new AppError('Lorry number is required', 400, 'VALIDATION_ERROR', {
+        otherVehicleNumber: 'Lorry number is required',
+      });
+    }
+    return { vehicleSource: source, vehicleId: null, vehicleNumberSnapshot: number };
+  }
+
+  if (!vehicleId) {
+    throw new AppError('Vehicle is required', 400, 'VALIDATION_ERROR', { vehicleId: 'Vehicle is required' });
+  }
+  const vehicle = await resolveActiveVehicle(vehicleId);
+  return { vehicleSource: source, vehicleId: vehicle._id, vehicleNumberSnapshot: vehicle.vehicleNumber };
+}
+
 export async function listJobsByDate(date: string) {
   assertBusinessDate(date);
   return Job.find({ jobDate: date })
@@ -48,7 +70,9 @@ export async function getJobById(id: string) {
 export async function createJob(
   input: {
     jobDate: string;
-    vehicleId: string;
+    vehicleSource?: VehicleSource;
+    vehicleId?: string;
+    otherVehicleNumber?: string;
     destination: string;
     status: JobStatus;
     notes?: string;
@@ -59,13 +83,16 @@ export async function createJob(
   await getOrCreateDayControl(jobDate);
   await assertDayIsOpen(jobDate);
 
-  const vehicle = await resolveActiveVehicle(input.vehicleId);
+  const vehicleFields = await resolveVehicleFields(
+    input.vehicleSource ?? VehicleSource.OWN,
+    input.vehicleId,
+    input.otherVehicleNumber,
+  );
   const actor = toObjectId(userId);
 
   return Job.create({
     jobDate,
-    vehicleId: vehicle._id,
-    vehicleNumberSnapshot: vehicle.vehicleNumber,
+    ...vehicleFields,
     destination: input.destination.trim(),
     status: input.status,
     notes: input.notes?.trim() ?? '',
@@ -78,7 +105,9 @@ export async function updateJob(
   id: string,
   input: {
     jobDate?: string;
+    vehicleSource?: VehicleSource;
     vehicleId?: string;
+    otherVehicleNumber?: string;
     destination?: string;
     status?: JobStatus;
     notes?: string;
@@ -97,10 +126,19 @@ export async function updateJob(
     job.jobDate = nextDate;
   }
 
-  if (input.vehicleId) {
-    const vehicle = await resolveActiveVehicle(input.vehicleId);
-    job.vehicleId = vehicle._id;
-    job.vehicleNumberSnapshot = vehicle.vehicleNumber;
+  const source = job.vehicleSource ?? VehicleSource.OWN;
+  if (input.vehicleSource && input.vehicleSource !== source) {
+    throw new AppError('Lorry type cannot be changed after the job is created', 400, 'VEHICLE_SOURCE_LOCKED', {
+      vehicleSource: 'Lorry type cannot be changed after the job is created',
+    });
+  }
+
+  const vehicleInputGiven =
+    source === VehicleSource.OWN ? Boolean(input.vehicleId) : Boolean(input.otherVehicleNumber);
+  if (vehicleInputGiven) {
+    const vehicleFields = await resolveVehicleFields(source, input.vehicleId, input.otherVehicleNumber);
+    job.vehicleId = vehicleFields.vehicleId;
+    job.vehicleNumberSnapshot = vehicleFields.vehicleNumberSnapshot;
   }
 
   if (input.destination !== undefined) job.destination = input.destination.trim();

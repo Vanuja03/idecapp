@@ -6,14 +6,14 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ErrorState } from '@/components/ErrorState';
+import { JobVehicleFields } from '@/components/JobVehicleFields';
 import { LoadingState } from '@/components/LoadingState';
 import { StatusBadge } from '@/components/StatusBadge';
 import { StatusDropdown } from '@/components/StatusDropdown';
-import { VehicleDropdown } from '@/components/VehicleDropdown';
 import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useDeleteJob, useJob, useUpdateJob, useVehicles } from '@/hooks/use-logistics';
-import { jobSchema, JobForm } from '@/schemas/forms';
-import { JobStatus } from '@/types';
+import { jobFormToPayload, jobSchema, JobForm } from '@/schemas/forms';
+import { JobStatus, VehicleSource } from '@/types';
 import { formatDateTime, userName } from '@/utils/dates';
 import { getErrorMessage } from '@/utils/errors';
 import { useAuth } from '@/store/auth';
@@ -33,7 +33,9 @@ export default function JobDetailScreen() {
     resolver: zodResolver(jobSchema),
     defaultValues: {
       jobDate: '',
+      vehicleSource: VehicleSource.OWN,
       vehicleId: '',
+      otherVehicleNumber: '',
       destination: '',
       status: JobStatus.PENDING,
       notes: '',
@@ -42,14 +44,20 @@ export default function JobDetailScreen() {
 
   useEffect(() => {
     if (!jobQuery.data) return;
+    const job = jobQuery.data;
+    const isOther = job.vehicleSource === VehicleSource.OTHER;
     form.reset({
-      jobDate: jobQuery.data.jobDate,
-      vehicleId: typeof jobQuery.data.vehicleId === 'string' ? jobQuery.data.vehicleId : String(jobQuery.data.vehicleId),
-      destination: jobQuery.data.destination,
-      status: jobQuery.data.status,
-      notes: jobQuery.data.notes ?? '',
+      jobDate: job.jobDate,
+      vehicleSource: isOther ? VehicleSource.OTHER : VehicleSource.OWN,
+      vehicleId: job.vehicleId ? String(job.vehicleId) : '',
+      otherVehicleNumber: isOther ? job.vehicleNumberSnapshot : '',
+      destination: job.destination,
+      status: job.status,
+      notes: job.notes ?? '',
     });
   }, [jobQuery.data, form]);
+
+  const isOtherLorry = form.watch('vehicleSource') === VehicleSource.OTHER;
 
   const jobDate = jobQuery.data?.jobDate;
   const dayQuery = useDailyJobs(jobDate ?? '');
@@ -72,7 +80,7 @@ export default function JobDetailScreen() {
     try {
       await updateJob.mutateAsync({
         id: jobQuery.data._id,
-        payload: values,
+        payload: jobFormToPayload(values),
       });
       setSnack('Job updated');
       router.back();
@@ -91,22 +99,18 @@ export default function JobDetailScreen() {
 
       <Text style={styles.date}>Job date: {jobQuery.data.jobDate}</Text>
       {!canEdit ? (
-        <Text style={styles.date}>Vehicle: {jobQuery.data.vehicleNumberSnapshot}</Text>
+        <Text style={styles.date}>
+          Vehicle: {jobQuery.data.vehicleNumberSnapshot}
+          {jobQuery.data.vehicleSource === VehicleSource.OTHER ? ' (Other lorry)' : ''}
+        </Text>
       ) : null}
 
       {canEdit ? (
-        <Controller
+        <JobVehicleFields
           control={form.control}
-          name="vehicleId"
-          render={({ field: { value, onChange } }) => (
-            <VehicleDropdown
-              vehicles={vehiclesQuery.data ?? []}
-              value={value}
-              onChange={onChange}
-              error={form.formState.errors.vehicleId?.message}
-              disabled={!canEdit}
-            />
-          )}
+          errors={form.formState.errors}
+          vehicles={vehiclesQuery.data ?? []}
+          sourceLocked
         />
       ) : null}
 
@@ -134,7 +138,15 @@ export default function JobDetailScreen() {
         control={form.control}
         name="notes"
         render={({ field: { value, onChange } }) => (
-          <TextInput label="Notes" mode="outlined" multiline value={value} onChangeText={onChange} disabled={!canEdit} />
+          <TextInput
+            label={isOtherLorry ? 'Vendor' : 'Notes'}
+            placeholder={isOtherLorry ? 'Vendor / owner of the lorry' : undefined}
+            mode="outlined"
+            multiline
+            value={value}
+            onChangeText={onChange}
+            disabled={!canEdit}
+          />
         )}
       />
 

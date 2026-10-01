@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { JobStatus, UserRole } from '../types';
+import { JobStatus, UserRole, VehicleSource } from '../types';
 
 export const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -57,18 +57,35 @@ export const idParamSchema = z.object({
   id: z.string().min(1),
 });
 
-export const createJobSchema = z.object({
-  jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
-  vehicleId: z.string().min(1, 'Vehicle is required'),
-  destination: z.string().trim().min(1, 'Destination is required').max(200),
-  status: z.nativeEnum(JobStatus).default(JobStatus.PENDING),
-  notes: z.string().max(1000).optional().default(''),
-});
+export const createJobSchema = z
+  .object({
+    jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    vehicleSource: z.nativeEnum(VehicleSource).default(VehicleSource.OWN),
+    vehicleId: z.string().optional(),
+    otherVehicleNumber: z.string().trim().max(32, 'Lorry number is too long').optional(),
+    destination: z.string().trim().min(1, 'Destination is required').max(200),
+    status: z.nativeEnum(JobStatus).default(JobStatus.PENDING),
+    notes: z.string().max(1000).optional().default(''),
+  })
+  .superRefine((data, ctx) => {
+    if (data.vehicleSource === VehicleSource.OWN && !data.vehicleId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['vehicleId'], message: 'Vehicle is required' });
+    }
+    if (data.vehicleSource === VehicleSource.OTHER && !data.otherVehicleNumber) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['otherVehicleNumber'],
+        message: 'Lorry number is required',
+      });
+    }
+  });
 
 export const updateJobSchema = z
   .object({
     jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    vehicleSource: z.nativeEnum(VehicleSource).optional(),
     vehicleId: z.string().min(1).optional(),
+    otherVehicleNumber: z.string().trim().min(1, 'Lorry number is required').max(32).optional(),
     destination: z.string().trim().min(1).max(200).optional(),
     status: z.nativeEnum(JobStatus).optional(),
     notes: z.string().max(1000).optional(),

@@ -15,6 +15,13 @@ export const JobStatus = {
 
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 
+export const VehicleSource = {
+  OWN: 'OWN',
+  OTHER: 'OTHER',
+} as const;
+
+export type VehicleSource = (typeof VehicleSource)[keyof typeof VehicleSource];
+
 export const DayStatus = {
   OPEN: 'OPEN',
   FINALIZED: 'FINALIZED',
@@ -48,7 +55,8 @@ export type JobUserRef = {
 export type Job = {
   _id: string;
   jobDate: string;
-  vehicleId: string;
+  vehicleSource?: VehicleSource;
+  vehicleId: string | null;
   vehicleNumberSnapshot: string;
   destination: string;
   status: JobStatus;
@@ -59,6 +67,16 @@ export type Job = {
   updatedAt: string;
   finalizedAt?: string | null;
   finalizedBy?: JobUserRef | string | null;
+};
+
+export type JobPayload = {
+  jobDate: string;
+  vehicleSource: VehicleSource;
+  vehicleId?: string;
+  otherVehicleNumber?: string;
+  destination: string;
+  status: JobStatus;
+  notes?: string;
 };
 
 export type DailyCounts = {

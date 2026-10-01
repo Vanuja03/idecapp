@@ -2,11 +2,17 @@ import PDFDocument from 'pdfkit';
 import { DailyJobControl } from '../models/DailyJobControl';
 import { Job } from '../models/Job';
 import { User } from '../models/User';
-import { DayStatus } from '../types';
+import { DayStatus, JobStatus, VehicleSource } from '../types';
 import { AppError } from '../utils/AppError';
 import { assertBusinessDate, formatDateTimeInTimezone } from '../utils/dates';
 
 type PopulatedUser = { name?: string; username?: string } | null;
+
+const STATUS_COLORS: Record<JobStatus, string> = {
+  PENDING: '#C98900',
+  COMPLETED: '#1F7A4D',
+  CANCELED: '#B42318',
+};
 
 function userLabel(ref: unknown): string {
   if (!ref) return '—';
@@ -86,7 +92,7 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
       { key: 'destination', label: 'Destination', width: 150 },
       { key: 'status', label: 'Status', width: 72 },
       { key: 'createdBy', label: 'Created By', width: 90 },
-      { key: 'notes', label: 'Notes', width: pageWidth - 28 - 78 - 150 - 72 - 90 },
+      { key: 'notes', label: 'Notes / Vendor', width: pageWidth - 28 - 78 - 150 - 72 - 90 },
     ] as const;
 
     const drawHeader = (y: number) => {
@@ -115,13 +121,15 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
       doc.text('No jobs were recorded for this date.', doc.page.margins.left, y + 10);
     } else {
       jobs.forEach((job, index) => {
+        const isOther = job.vehicleSource === VehicleSource.OTHER;
+        const note = job.notes?.trim();
         const values = [
           String(index + 1),
-          job.vehicleNumberSnapshot,
+          isOther ? `${job.vehicleNumberSnapshot} (Other)` : job.vehicleNumberSnapshot,
           job.destination,
           job.status,
           userLabel(job.createdBy),
-          job.notes?.trim() ? job.notes.trim() : '—',
+          note ? (isOther ? `Vendor: ${note}` : note) : '—',
         ];
 
         const heights = columns.map((column, i) =>
@@ -134,9 +142,14 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
           doc.rect(doc.page.margins.left, y, pageWidth, rowHeight).fill('#F4F6F9');
         }
 
-        doc.fillColor('#12263A').font('Helvetica').fontSize(9);
+        doc.fontSize(9);
         let x = doc.page.margins.left + 4;
         columns.forEach((column, i) => {
+          if (column.key === 'status') {
+            doc.fillColor(STATUS_COLORS[job.status] ?? '#12263A').font('Helvetica-Bold');
+          } else {
+            doc.fillColor('#12263A').font('Helvetica');
+          }
           doc.text(values[i], x, y + 5, { width: column.width - 8 });
           x += column.width;
         });

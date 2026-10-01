@@ -1,5 +1,5 @@
 import { api } from '@/api/client';
-import { AuthUser, CompletedByVehicleAnalytics, DailyView, Job, JobStatus, Vehicle } from '@/types';
+import { AuthUser, CompletedByVehicleAnalytics, DailyView, Job, JobPayload, Vehicle } from '@/types';
 
 export async function getCompletedByVehicle(period: 'week' | 'month', date: string) {
   const { data } = await api.get<{ data: CompletedByVehicleAnalytics }>('/analytics/completed-by-vehicle', {
@@ -35,27 +35,12 @@ export async function getJob(id: string) {
   return data.data.job;
 }
 
-export async function createJobRequest(payload: {
-  jobDate: string;
-  vehicleId: string;
-  destination: string;
-  status: JobStatus;
-  notes?: string;
-}) {
+export async function createJobRequest(payload: JobPayload) {
   const { data } = await api.post<{ data: { job: Job } }>('/jobs', payload);
   return data.data.job;
 }
 
-export async function updateJobRequest(
-  id: string,
-  payload: Partial<{
-    jobDate: string;
-    vehicleId: string;
-    destination: string;
-    status: JobStatus;
-    notes: string;
-  }>,
-) {
+export async function updateJobRequest(id: string, payload: Partial<JobPayload>) {
   const { data } = await api.put<{ data: { job: Job } }>(`/jobs/${id}`, payload);
   return data.data.job;
 }

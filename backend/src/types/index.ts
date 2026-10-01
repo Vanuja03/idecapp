@@ -17,6 +17,13 @@ export const JobStatus = {
 
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 
+export const VehicleSource = {
+  OWN: 'OWN',
+  OTHER: 'OTHER',
+} as const;
+
+export type VehicleSource = (typeof VehicleSource)[keyof typeof VehicleSource];
+
 export const DayStatus = {
   OPEN: 'OPEN',
   FINALIZED: 'FINALIZED',

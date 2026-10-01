@@ -1,9 +1,10 @@
 import mongoose, { Document, Model, Schema, Types } from 'mongoose';
-import { JobStatus } from '../types';
+import { JobStatus, VehicleSource } from '../types';
 
 export interface JobDocument extends Document {
   jobDate: string;
-  vehicleId: Types.ObjectId;
+  vehicleSource: VehicleSource;
+  vehicleId: Types.ObjectId | null;
   vehicleNumberSnapshot: string;
   destination: string;
   status: JobStatus;
@@ -19,8 +20,15 @@ export interface JobDocument extends Document {
 const jobSchema = new Schema<JobDocument>(
   {
     jobDate: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
-    vehicleId: { type: Schema.Types.ObjectId, ref: 'Vehicle', required: true },
-    vehicleNumberSnapshot: { type: String, required: true },
+    vehicleSource: {
+      type: String,
+      required: true,
+      enum: Object.values(VehicleSource),
+      default: VehicleSource.OWN,
+    },
+    // Only set for company lorries; temporary (OTHER) lorries keep their number in vehicleNumberSnapshot
+    vehicleId: { type: Schema.Types.ObjectId, ref: 'Vehicle', default: null },
+    vehicleNumberSnapshot: { type: String, required: true, trim: true, maxlength: 32 },
     destination: { type: String, required: true, trim: true, maxlength: 200 },
     status: {
       type: String,

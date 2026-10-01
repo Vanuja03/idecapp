@@ -5,13 +5,13 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { DateSelector } from '@/components/DateSelector';
 import { ErrorState } from '@/components/ErrorState';
+import { JobVehicleFields } from '@/components/JobVehicleFields';
 import { LoadingState } from '@/components/LoadingState';
 import { StatusDropdown } from '@/components/StatusDropdown';
-import { VehicleDropdown } from '@/components/VehicleDropdown';
 import { palette, spacing } from '@/constants/theme';
 import { useCreateJob, useDailyJobs, useVehicles } from '@/hooks/use-logistics';
-import { jobSchema, JobForm } from '@/schemas/forms';
-import { JobStatus } from '@/types';
+import { jobFormToPayload, jobSchema, JobForm } from '@/schemas/forms';
+import { JobStatus, VehicleSource } from '@/types';
 import { todayBusinessDate } from '@/utils/dates';
 import { getErrorMessage, getFieldErrors } from '@/utils/errors';
 import { useAuth } from '@/store/auth';
@@ -37,7 +37,9 @@ export default function CreateJobScreen() {
     resolver: zodResolver(jobSchema),
     defaultValues: {
       jobDate: defaultDate,
+      vehicleSource: VehicleSource.OWN,
       vehicleId: '',
+      otherVehicleNumber: '',
       destination: '',
       status: JobStatus.PENDING,
       notes: '',
@@ -45,16 +47,13 @@ export default function CreateJobScreen() {
   });
 
   const jobDate = watch('jobDate');
+  const isOtherLorry = watch('vehicleSource') === VehicleSource.OTHER;
   const selectedDay = useDailyJobs(jobDate);
   const locked = selectedDay.data?.status === 'FINALIZED';
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await createJob.mutateAsync({
-        ...values,
-        destination: values.destination.trim(),
-        notes: values.notes?.trim(),
-      });
+      await createJob.mutateAsync(jobFormToPayload(values));
       router.back();
     } catch (error) {
       const fields = getFieldErrors(error);
@@ -82,18 +81,11 @@ export default function CreateJobScreen() {
         render={({ field: { value, onChange } }) => <DateSelector value={value} onChange={onChange} />}
       />
 
-      <Controller
+      <JobVehicleFields
         control={control}
-        name="vehicleId"
-        render={({ field: { value, onChange } }) => (
-          <VehicleDropdown
-            vehicles={vehiclesQuery.data ?? []}
-            value={value}
-            onChange={onChange}
-            error={errors.vehicleId?.message}
-            disabled={locked}
-          />
-        )}
+        errors={errors}
+        vehicles={vehiclesQuery.data ?? []}
+        disabled={locked}
       />
 
       <Controller
@@ -126,7 +118,8 @@ export default function CreateJobScreen() {
         name="notes"
         render={({ field: { value, onChange, onBlur } }) => (
           <TextInput
-            label="Notes (optional)"
+            label={isOtherLorry ? 'Vendor' : 'Notes (optional)'}
+            placeholder={isOtherLorry ? 'Vendor / owner of the lorry' : undefined}
             mode="outlined"
             multiline
             value={value}

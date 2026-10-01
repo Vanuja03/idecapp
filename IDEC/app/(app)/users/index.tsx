@@ -25,6 +25,7 @@ export default function UsersScreen() {
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.OPERATOR);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   if (!canManageUsers(user?.role)) {
@@ -37,6 +38,7 @@ export default function UsersScreen() {
     setName('');
     setRole(UserRole.OPERATOR);
     setPassword('');
+    setShowPassword(false);
     setFormError(null);
   };
 
@@ -46,6 +48,7 @@ export default function UsersScreen() {
     setName(item.name);
     setRole(item.role);
     setPassword('');
+    setShowPassword(false);
     setFormError(null);
   };
 
@@ -117,10 +120,20 @@ export default function UsersScreen() {
             </View>
             <TextInput
               label={editor === 'new' ? 'Password' : 'Reset password (optional)'}
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
               value={password}
               onChangeText={setPassword}
               style={{ marginTop: 12 }}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  forceTextInputFocus={false}
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                />
+              }
             />
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
           </Dialog.Content>

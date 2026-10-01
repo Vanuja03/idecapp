@@ -1,18 +1,46 @@
 import { z } from 'zod';
-import { JobStatus, UserRole } from '@/types';
+import { JobPayload, JobStatus, UserRole, VehicleSource } from '@/types';
 
 export const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
-export const jobSchema = z.object({
-  jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Select a valid date'),
-  vehicleId: z.string().min(1, 'Select a vehicle'),
-  destination: z.string().trim().min(1, 'Destination is required').max(200),
-  status: z.nativeEnum(JobStatus),
-  notes: z.string().max(1000).optional(),
-});
+export const jobSchema = z
+  .object({
+    jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Select a valid date'),
+    vehicleSource: z.nativeEnum(VehicleSource),
+    vehicleId: z.string().optional(),
+    otherVehicleNumber: z.string().trim().max(32, 'Lorry number is too long').optional(),
+    destination: z.string().trim().min(1, 'Destination is required').max(200),
+    status: z.nativeEnum(JobStatus),
+    notes: z.string().max(1000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.vehicleSource === VehicleSource.OWN && !data.vehicleId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['vehicleId'], message: 'Select a vehicle' });
+    }
+    if (data.vehicleSource === VehicleSource.OTHER && !data.otherVehicleNumber) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['otherVehicleNumber'],
+        message: 'Enter the lorry number',
+      });
+    }
+  });
+
+export function jobFormToPayload(values: JobForm): JobPayload {
+  const base = {
+    jobDate: values.jobDate,
+    vehicleSource: values.vehicleSource,
+    destination: values.destination.trim(),
+    status: values.status,
+    notes: values.notes?.trim() ?? '',
+  };
+  return values.vehicleSource === VehicleSource.OTHER
+    ? { ...base, otherVehicleNumber: values.otherVehicleNumber?.trim() }
+    : { ...base, vehicleId: values.vehicleId };
+}
 
 export const vehicleSchema = z.object({
   vehicleNumber: z.string().min(1, 'Vehicle number is required').max(32),
