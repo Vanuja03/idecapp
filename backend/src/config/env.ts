@@ -18,5 +18,7 @@ export const env = {
   appTimezone: process.env.APP_TIMEZONE ?? 'Asia/Colombo',
   nodeEnv: process.env.NODE_ENV ?? 'development',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
+  /** Express `trust proxy` value; `loopback` trusts a reverse proxy (Nginx) running on the same server. */
+  trustProxy: process.env.TRUST_PROXY ?? 'loopback',
   isTest: process.env.NODE_ENV === 'test',
 };
