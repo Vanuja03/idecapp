@@ -18,9 +18,17 @@ type Props = {
   vehicles: Vehicle[];
   disabled?: boolean;
   sourceLocked?: boolean;
+  inJobVehicleIds?: string[];
 };
 
-export function JobVehicleFields({ control, errors, vehicles, disabled, sourceLocked }: Props) {
+export function JobVehicleFields({
+  control,
+  errors,
+  vehicles,
+  disabled,
+  sourceLocked,
+  inJobVehicleIds,
+}: Props) {
   const source = useWatch({ control, name: 'vehicleSource' });
 
   return (
@@ -105,6 +113,7 @@ export function JobVehicleFields({ control, errors, vehicles, disabled, sourceLo
               onChange={onChange}
               error={errors.vehicleId?.message}
               disabled={disabled}
+              inJobVehicleIds={inJobVehicleIds}
             />
           )}
         />

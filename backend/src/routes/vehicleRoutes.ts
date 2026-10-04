@@ -7,6 +7,7 @@ import { Permission } from '../types';
 import {
   createVehicleSchema,
   idParamSchema,
+  jobDateQuerySchema,
   updateVehicleSchema,
   vehicleStatusSchema,
   vehiclesQuerySchema,
@@ -18,6 +19,12 @@ const auth = asyncHandler(authenticate);
 router.use(auth);
 
 router.get('/', validate(vehiclesQuerySchema, 'query'), requirePermission(Permission.VEHICLE_VIEW), vehicleController.list);
+router.get(
+  '/in-job',
+  validate(jobDateQuerySchema, 'query'),
+  requirePermission(Permission.VEHICLE_VIEW),
+  vehicleController.listInJob,
+);
 router.get('/:id', validate(idParamSchema, 'params'), requirePermission(Permission.VEHICLE_VIEW), vehicleController.getById);
 router.post('/', requirePermission(Permission.VEHICLE_MANAGE), validate(createVehicleSchema), vehicleController.create);
 router.put(

@@ -253,6 +253,53 @@ describe('Jobs', () => {
     expect(res.body.data.trucks).toEqual([{ vehicleNumber: 'ABC-1234', completed: 1 }]);
   });
 
+  it('lists lorries that are in a pending job on the given day', async () => {
+    const { Authorization } = await authHeader(UserRole.OPERATOR);
+    const busy = await createVehicle('BUSY-1');
+    await createVehicle('FREE-1');
+    const created = await request(app)
+      .post('/api/jobs')
+      .set('Authorization', Authorization)
+      .send({ jobDate: '2026-08-11', vehicleId: busy._id.toString(), destination: 'Colombo', status: 'PENDING' });
+    await request(app)
+      .post('/api/jobs')
+      .set('Authorization', Authorization)
+      .send({
+        jobDate: '2026-08-11',
+        vehicleSource: 'OTHER',
+        otherVehicleNumber: 'TMP-1',
+        destination: 'Galle',
+        status: 'PENDING',
+        notes: 'Perera Transport',
+      });
+
+    const inJob = await request(app)
+      .get('/api/vehicles/in-job?date=2026-08-11')
+      .set('Authorization', Authorization);
+    expect(inJob.status).toBe(200);
+    expect(inJob.body.data.vehicleIds).toEqual([busy._id.toString()]);
+
+    const nextDay = await request(app)
+      .get('/api/vehicles/in-job?date=2026-08-12')
+      .set('Authorization', Authorization);
+    expect(nextDay.body.data.vehicleIds).toEqual([]);
+
+    await request(app)
+      .put(`/api/jobs/${created.body.data.job._id}`)
+      .set('Authorization', Authorization)
+      .send({ status: 'COMPLETED' });
+    const afterComplete = await request(app)
+      .get('/api/vehicles/in-job?date=2026-08-11')
+      .set('Authorization', Authorization);
+    expect(afterComplete.body.data.vehicleIds).toEqual([]);
+  });
+
+  it('requires a date when listing lorries in a job', async () => {
+    const { Authorization } = await authHeader(UserRole.OPERATOR);
+    const res = await request(app).get('/api/vehicles/in-job').set('Authorization', Authorization);
+    expect(res.status).toBe(400);
+  });
+
   it('rejects missing destination', async () => {
     const { Authorization } = await authHeader(UserRole.ADMIN);
     const vehicle = await createVehicle();

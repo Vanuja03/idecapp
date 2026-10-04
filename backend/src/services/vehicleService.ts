@@ -1,9 +1,23 @@
+import { Job } from '../models/Job';
 import { Vehicle } from '../models/Vehicle';
+import { JobStatus } from '../types';
 import { AppError } from '../utils/AppError';
+import { assertBusinessDate } from '../utils/dates';
 
 export async function listVehicles(activeOnly?: boolean) {
   const filter = activeOnly === undefined ? {} : { isActive: activeOnly };
   return Vehicle.find(filter).sort({ vehicleNumber: 1 });
+}
+
+/** Company lorries with a PENDING job on the given day; every lorry is available again the next day. */
+export async function listVehicleIdsInJob(date: string): Promise<string[]> {
+  const jobDate = assertBusinessDate(date);
+  const ids = await Job.distinct('vehicleId', {
+    jobDate,
+    status: JobStatus.PENDING,
+    vehicleId: { $ne: null },
+  });
+  return ids.map((id) => String(id));
 }
 
 export async function getVehicleById(id: string) {

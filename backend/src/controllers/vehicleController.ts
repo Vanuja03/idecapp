@@ -9,6 +9,11 @@ export const list = asyncHandler(async (req, res: Response) => {
   sendSuccess(res, { vehicles }, 'Vehicles retrieved');
 });
 
+export const listInJob = asyncHandler(async (req, res: Response) => {
+  const vehicleIds = await vehicleService.listVehicleIdsInJob((req.query as { date: string }).date);
+  sendSuccess(res, { vehicleIds }, 'Vehicles in job retrieved');
+});
+
 export const getById = asyncHandler(async (req, res: Response) => {
   const vehicle = await vehicleService.getVehicleById(req.params.id);
   sendSuccess(res, { vehicle }, 'Vehicle retrieved');

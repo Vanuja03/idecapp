@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -18,14 +18,38 @@ type Props = {
   onChange: (vehicleId: string) => void;
   error?: string;
   disabled?: boolean;
+  /** When provided, lorries are tagged and available ones are listed first */
+  inJobVehicleIds?: string[];
 };
 
-export function VehicleDropdown({ vehicles, value, onChange, error, disabled }: Props) {
+function AvailabilityTag({ inJob }: { inJob: boolean }) {
+  return (
+    <View style={[styles.tag, inJob ? styles.tagInJob : styles.tagAvailable]}>
+      <Text style={[styles.tagText, inJob ? styles.tagTextInJob : styles.tagTextAvailable]}>
+        {inJob ? 'In Job' : 'Available'}
+      </Text>
+    </View>
+  );
+}
+
+export function VehicleDropdown({ vehicles, value, onChange, error, disabled, inJobVehicleIds }: Props) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<LayoutRectangle | null>(null);
   const fieldRef = useRef<View>(null);
   const { height: windowHeight } = useWindowDimensions();
   const selected = vehicles.find((vehicle) => vehicle._id === value);
+  const showAvailability = inJobVehicleIds !== undefined;
+  const inJobSet = useMemo(() => new Set(inJobVehicleIds ?? []), [inJobVehicleIds]);
+  const orderedVehicles = useMemo(
+    () =>
+      showAvailability
+        ? [
+            ...vehicles.filter((vehicle) => !inJobSet.has(vehicle._id)),
+            ...vehicles.filter((vehicle) => inJobSet.has(vehicle._id)),
+          ]
+        : vehicles,
+    [vehicles, inJobSet, showAvailability],
+  );
 
   const openDropdown = () => {
     if (disabled) return;
@@ -77,9 +101,12 @@ export function VehicleDropdown({ vehicles, value, onChange, error, disabled }: 
           style={[styles.field, error ? styles.invalid : null, disabled && styles.disabled]}
         >
           <Text style={styles.label}>Vehicle</Text>
-          <Text style={selected ? styles.value : styles.placeholder}>
-            {selected ? selected.vehicleNumber : 'Select a truck'}
-          </Text>
+          <View style={styles.valueRow}>
+            <Text style={selected ? styles.value : styles.placeholder}>
+              {selected ? selected.vehicleNumber : 'Select a truck'}
+            </Text>
+            {selected && showAvailability ? <AvailabilityTag inJob={inJobSet.has(selected._id)} /> : null}
+          </View>
         </Pressable>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -90,21 +117,24 @@ export function VehicleDropdown({ vehicles, value, onChange, error, disabled }: 
           {dropdownStyle ? (
             <View style={[styles.dropdown, dropdownStyle]}>
               <FlatList
-                data={vehicles}
+                data={orderedVehicles}
                 keyExtractor={(item) => item._id}
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => {
                   const isSelected = item._id === value;
                   return (
                     <Pressable
-                      style={[styles.option, isSelected && styles.optionSelected]}
+                      style={[styles.option, styles.optionRow, isSelected && styles.optionSelected]}
                       onPress={() => {
                         onChange(item._id);
                         close();
                       }}
                     >
-                      <Text style={styles.optionNumber}>{item.vehicleNumber}</Text>
-                      <Text style={styles.optionDesc}>{item.description}</Text>
+                      <View style={styles.optionText}>
+                        <Text style={styles.optionNumber}>{item.vehicleNumber}</Text>
+                        <Text style={styles.optionDesc}>{item.description}</Text>
+                      </View>
+                      {showAvailability ? <AvailabilityTag inJob={inJobSet.has(item._id)} /> : null}
                     </Pressable>
                   );
                 }}
@@ -160,6 +190,15 @@ const styles = StyleSheet.create({
   optionSelected: {
     backgroundColor: palette.infoBg,
   },
+  optionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  optionText: { flex: 1 },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  tag: { borderRadius: radius.sm, paddingHorizontal: 8, paddingVertical: 2 },
+  tagAvailable: { backgroundColor: palette.successBg },
+  tagInJob: { backgroundColor: palette.warningBg },
+  tagText: { fontSize: 11, fontWeight: '800' },
+  tagTextAvailable: { color: palette.success },
+  tagTextInJob: { color: palette.warning },
   optionNumber: { fontWeight: '700', color: palette.text, fontSize: 16 },
   optionDesc: { color: palette.muted, marginTop: 2 },
   empty: { color: palette.muted, padding: spacing.lg, textAlign: 'center' },

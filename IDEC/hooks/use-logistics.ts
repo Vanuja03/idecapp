@@ -9,6 +9,7 @@ import {
   getJob,
   getCompletedByVehicle,
   listUsersRequest,
+  listVehiclesInJobRequest,
   listVehiclesRequest,
   setUserStatusRequest,
   setVehicleStatusRequest,
@@ -55,6 +56,15 @@ export function useVehicles(active?: boolean, enabled = true) {
   });
 }
 
+export function useVehiclesInJob(date: string) {
+  return useQuery({
+    queryKey: ['vehicles-in-job', date],
+    queryFn: () => listVehiclesInJobRequest(date),
+    enabled: Boolean(date),
+    staleTime: 0,
+  });
+}
+
 export function useUsers() {
   return useQuery({
     queryKey: ['users'],
@@ -67,6 +77,7 @@ function useInvalidateJobs() {
   return (date?: string) => {
     queryClient.invalidateQueries({ queryKey: ['daily-jobs'] });
     queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles-in-job'] });
     if (date) queryClient.invalidateQueries({ queryKey: ['daily-jobs', date] });
   };
 }

@@ -61,6 +61,11 @@ export async function listVehiclesRequest(active?: boolean) {
   return data.data.vehicles;
 }
 
+export async function listVehiclesInJobRequest(date: string) {
+  const { data } = await api.get<{ data: { vehicleIds: string[] } }>('/vehicles/in-job', { params: { date } });
+  return data.data.vehicleIds;
+}
+
 export async function createVehicleRequest(payload: { vehicleNumber: string; description: string }) {
   const { data } = await api.post<{ data: { vehicle: Vehicle } }>('/vehicles', payload);
   return data.data.vehicle;

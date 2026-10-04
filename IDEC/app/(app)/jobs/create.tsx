@@ -9,7 +9,7 @@ import { JobVehicleFields } from '@/components/JobVehicleFields';
 import { LoadingState } from '@/components/LoadingState';
 import { StatusDropdown } from '@/components/StatusDropdown';
 import { palette, spacing } from '@/constants/theme';
-import { useCreateJob, useDailyJobs, useVehicles } from '@/hooks/use-logistics';
+import { useCreateJob, useDailyJobs, useVehicles, useVehiclesInJob } from '@/hooks/use-logistics';
 import { jobFormToPayload, jobSchema, JobForm } from '@/schemas/forms';
 import { JobStatus, VehicleSource } from '@/types';
 import { todayBusinessDate } from '@/utils/dates';
@@ -49,6 +49,7 @@ export default function CreateJobScreen() {
   const jobDate = watch('jobDate');
   const isOtherLorry = watch('vehicleSource') === VehicleSource.OTHER;
   const selectedDay = useDailyJobs(jobDate);
+  const inJobQuery = useVehiclesInJob(jobDate);
   const locked = selectedDay.data?.status === 'FINALIZED';
 
   const onSubmit = handleSubmit(async (values) => {
@@ -85,6 +86,7 @@ export default function CreateJobScreen() {
         control={control}
         errors={errors}
         vehicles={vehiclesQuery.data ?? []}
+        inJobVehicleIds={inJobQuery.data ?? []}
         disabled={locked}
       />
 
