@@ -3,6 +3,8 @@ import { clearToken, getToken } from '@/services/secureToken';
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.ideclogistics.com/api';
 // const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.8.140:5000/api';
+if (__DEV__) console.log(`[api] base URL: ${baseURL}`);
+
 export const api = axios.create({
   baseURL,
   timeout: 30000,
