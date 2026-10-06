@@ -1,12 +1,13 @@
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Button, Dialog, Portal, Switch, TextInput } from 'react-native-paper';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { palette, radius, spacing } from '@/constants/theme';
 import { useCreateVehicle, useSetVehicleStatus, useUpdateVehicle, useVehicles } from '@/hooks/use-logistics';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useAuth } from '@/store/auth';
 import { Vehicle } from '@/types';
 import { getErrorMessage } from '@/utils/errors';
@@ -22,6 +23,7 @@ export default function VehiclesScreen() {
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [description, setDescription] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const pullToRefresh = usePullToRefresh(refetch);
 
   const canManage = canManageVehicles(user?.role);
 
@@ -69,6 +71,7 @@ export default function VehiclesScreen() {
         contentContainerStyle={styles.content}
         data={data ?? []}
         keyExtractor={(item) => item._id}
+        refreshControl={<RefreshControl {...pullToRefresh} />}
         ListEmptyComponent={!isLoading ? <EmptyState title="No vehicles yet." /> : null}
         renderItem={({ item }) => (
           <View style={styles.card}>

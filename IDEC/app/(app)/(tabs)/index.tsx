@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DailySummary } from '@/components/DailySummary';
@@ -7,13 +7,15 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { JobCard } from '@/components/JobCard';
 import { LoadingState } from '@/components/LoadingState';
+import { LorryAvailabilityCard } from '@/components/LorryAvailabilityCard';
 import { palette, spacing } from '@/constants/theme';
-import { useDailyJobs, useFinalizeDay } from '@/hooks/use-logistics';
+import { useDailyJobs, useFinalizeDay, useVehicles, useVehiclesInJob } from '@/hooks/use-logistics';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useAuth } from '@/store/auth';
 import { formatDisplayDate, greetingForNow, todayBusinessDate } from '@/utils/dates';
 import { getErrorMessage } from '@/utils/errors';
-import { canCreateJob, canFinalize } from '@/utils/permissions';
-import { useEffect, useState } from 'react';
+import { canCreateJob, canFinalize, canViewVehicles } from '@/utils/permissions';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function DashboardScreen() {
   const { user } = useAuth();
@@ -22,6 +24,20 @@ export default function DashboardScreen() {
   const finalize = useFinalizeDay();
   const [confirm, setConfirm] = useState(false);
   const [greeting, setGreeting] = useState(greetingForNow);
+  const showLorries = canViewVehicles(user?.role);
+  const vehiclesQuery = useVehicles(true, showLorries);
+  const inJobQuery = useVehiclesInJob(today, showLorries);
+  const { refetch: refetchVehicles } = vehiclesQuery;
+  const { refetch: refetchInJob } = inJobQuery;
+  const pullToRefresh = usePullToRefresh(
+    useCallback(() => {
+      setGreeting(greetingForNow());
+      return Promise.all([refetch(), ...(showLorries ? [refetchVehicles(), refetchInJob()] : [])]);
+    }, [refetch, refetchVehicles, refetchInJob, showLorries]),
+  );
+  const activeVehicles = vehiclesQuery.data ?? [];
+  const inJobIds = new Set(inJobQuery.data ?? []);
+  const lorriesInJob = activeVehicles.filter((vehicle) => inJobIds.has(vehicle._id)).length;
 
   useEffect(() => {
     const timer = setInterval(() => setGreeting(greetingForNow()), 60_000);
@@ -29,7 +45,7 @@ export default function DashboardScreen() {
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl {...pullToRefresh} />}>
       <Text style={styles.hello}>
         {greeting}, {user?.name}
       </Text>
@@ -45,6 +61,13 @@ export default function DashboardScreen() {
         />
       ) : null}
       {data ? <DailySummary day={data} /> : null}
+      {showLorries ? (
+        <LorryAvailabilityCard
+          total={activeVehicles.length}
+          inJob={lorriesInJob}
+          loading={vehiclesQuery.isLoading || inJobQuery.isLoading}
+        />
+      ) : null}
 
       <View style={styles.actions}>
         {canCreateJob(user?.role) && data?.status === 'OPEN' ? (

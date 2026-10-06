@@ -1,12 +1,13 @@
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Button, Dialog, Portal, Switch, TextInput } from 'react-native-paper';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { palette, radius, spacing } from '@/constants/theme';
 import { useCreateUser, useSetUserStatus, useUpdateUser, useUsers } from '@/hooks/use-logistics';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useAuth } from '@/store/auth';
 import { AuthUser, UserRole } from '@/types';
 import { getErrorMessage } from '@/utils/errors';
@@ -27,6 +28,7 @@ export default function UsersScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const pullToRefresh = usePullToRefresh(refetch);
 
   if (!canManageUsers(user?.role)) {
     return <Redirect href="/(app)/(tabs)/profile" />;
@@ -78,6 +80,7 @@ export default function UsersScreen() {
         contentContainerStyle={styles.content}
         data={data ?? []}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl {...pullToRefresh} />}
         ListEmptyComponent={!isLoading ? <EmptyState title="No users found." /> : null}
         renderItem={({ item }) => (
           <View style={styles.card}>

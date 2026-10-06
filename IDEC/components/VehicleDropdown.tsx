@@ -50,6 +50,10 @@ export function VehicleDropdown({ vehicles, value, onChange, error, disabled, in
         : vehicles,
     [vehicles, inJobSet, showAvailability],
   );
+  const availableCount = vehicles.filter((vehicle) => !inJobSet.has(vehicle._id)).length;
+  const placeholder = showAvailability
+    ? `Select a truck (${availableCount} of ${vehicles.length} available)`
+    : 'Select a truck';
 
   const openDropdown = () => {
     if (disabled) return;
@@ -100,10 +104,15 @@ export function VehicleDropdown({ vehicles, value, onChange, error, disabled, in
           onPress={openDropdown}
           style={[styles.field, error ? styles.invalid : null, disabled && styles.disabled]}
         >
-          <Text style={styles.label}>Vehicle</Text>
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>Vehicle</Text>
+            {selected && showAvailability ? (
+              <Text style={styles.availableHint}>{availableCount} available</Text>
+            ) : null}
+          </View>
           <View style={styles.valueRow}>
             <Text style={selected ? styles.value : styles.placeholder}>
-              {selected ? selected.vehicleNumber : 'Select a truck'}
+              {selected ? selected.vehicleNumber : placeholder}
             </Text>
             {selected && showAvailability ? <AvailabilityTag inJob={inJobSet.has(selected._id)} /> : null}
           </View>
@@ -160,7 +169,9 @@ const styles = StyleSheet.create({
   },
   invalid: { borderColor: palette.error },
   disabled: { opacity: 0.6 },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label: { color: palette.muted, fontSize: 12, marginBottom: 4 },
+  availableHint: { color: palette.success, fontSize: 12, fontWeight: '700', marginBottom: 4 },
   value: { color: palette.text, fontWeight: '700', fontSize: 16 },
   placeholder: { color: palette.muted },
   error: { color: palette.error, marginTop: 4 },

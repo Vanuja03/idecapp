@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ErrorState } from '@/components/ErrorState';
@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { StatusDropdown } from '@/components/StatusDropdown';
 import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useDeleteJob, useJob, useUpdateJob, useVehicles } from '@/hooks/use-logistics';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { jobFormToPayload, jobSchema, JobForm } from '@/schemas/forms';
 import { JobStatus, VehicleSource } from '@/types';
 import { formatDateTime, userName } from '@/utils/dates';
@@ -64,6 +65,11 @@ export default function JobDetailScreen() {
   const locked = dayQuery.data?.status === 'FINALIZED';
   const canEdit = canUpdateJob(user?.role) && !locked;
   const canDelete = canDeleteJob(user?.role) && !locked;
+  const { refetch: refetchJob } = jobQuery;
+  const { refetch: refetchDay } = dayQuery;
+  const pullToRefresh = usePullToRefresh(
+    useCallback(() => Promise.all([refetchJob(), refetchDay()]), [refetchJob, refetchDay]),
+  );
 
   if (jobQuery.isLoading) return <LoadingState label="Loading job…" />;
   if (jobQuery.isError || !jobQuery.data) {
@@ -90,7 +96,7 @@ export default function JobDetailScreen() {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl {...pullToRefresh} />}>
       <Text style={styles.meta}>Created by {userName(jobQuery.data.createdBy)}</Text>
       <Text style={styles.meta}>Last updated {formatDateTime(jobQuery.data.updatedAt)}</Text>
       {locked ? (

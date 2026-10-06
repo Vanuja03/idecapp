@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { Button, FAB, Snackbar } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DailySummary } from '@/components/DailySummary';
@@ -12,6 +12,7 @@ import { JobCard } from '@/components/JobCard';
 import { LoadingState } from '@/components/LoadingState';
 import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useFinalizeDay } from '@/hooks/use-logistics';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { downloadDailyJobsPdf } from '@/services/downloadDailyPdf';
 import { useAuth } from '@/store/auth';
 import { formatDisplayDate, todayBusinessDate } from '@/utils/dates';
@@ -26,6 +27,7 @@ export default function DailyJobsScreen() {
   const [confirm, setConfirm] = useState(false);
   const [snack, setSnack] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const pullToRefresh = usePullToRefresh(refetch);
   const isOpen = data?.status === 'OPEN';
   const isFinalized = data?.status === 'FINALIZED';
   const canAdd = canCreateJob(user?.role) && isOpen;
@@ -48,6 +50,7 @@ export default function DailyJobsScreen() {
         contentContainerStyle={styles.content}
         data={data?.jobs ?? []}
         keyExtractor={(item) => item._id}
+        refreshControl={<RefreshControl {...pullToRefresh} />}
         ListHeaderComponent={
           <View style={styles.header}>
             <DateSelector value={date} onChange={setDate} />

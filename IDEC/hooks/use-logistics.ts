@@ -56,11 +56,11 @@ export function useVehicles(active?: boolean, enabled = true) {
   });
 }
 
-export function useVehiclesInJob(date: string) {
+export function useVehiclesInJob(date: string, enabled = true) {
   return useQuery({
     queryKey: ['vehicles-in-job', date],
     queryFn: () => listVehiclesInJobRequest(date),
-    enabled: Boolean(date),
+    enabled: enabled && Boolean(date),
     staleTime: 0,
   });
 }

@@ -1,13 +1,14 @@
 import { useFocusEffect } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { TruckCompletedBarChart } from '@/components/TruckCompletedBarChart';
 import { palette, radius, spacing } from '@/constants/theme';
 import { useCompletedByVehicle } from '@/hooks/use-logistics';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import {
   formatMonthYear,
   formatWeekRange,
@@ -18,10 +19,14 @@ import {
 } from '@/utils/dates';
 import { getErrorMessage } from '@/utils/errors';
 
+/** Keeps bars readable on short landscape screens; the page scrolls vertically instead of squeezing the chart. */
+const CHART_MIN_HEIGHT = 300;
+
 export default function AnalyticsScreen() {
   const [period, setPeriod] = useState<'week' | 'month'>('week');
   const [date, setDate] = useState(todayBusinessDate());
   const { data, isLoading, isError, error, refetch } = useCompletedByVehicle(period, date);
+  const pullToRefresh = usePullToRefresh(refetch);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,7 +47,13 @@ export default function AnalyticsScreen() {
     period === 'week' ? formatWeekRange(range.from, range.to) : formatMonthYear(range.from);
 
   return (
-    <View style={styles.screen}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl {...pullToRefresh} />}
+      showsVerticalScrollIndicator
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.toolbar}>
         <SegmentedButtons
           value={period}
@@ -83,15 +94,16 @@ export default function AnalyticsScreen() {
       ) : null}
       {data ? (
         <View style={styles.chart}>
-          <TruckCompletedBarChart trucks={data.trucks} />
+          <TruckCompletedBarChart trucks={data.trucks} periodLabel={periodLabel} />
         </View>
       ) : null}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: palette.surface, paddingHorizontal: spacing.md, paddingTop: spacing.sm },
+  screen: { flex: 1, backgroundColor: palette.surface },
+  content: { flexGrow: 1, paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.lg },
   toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   segment: { flex: 1, maxWidth: 280 },
   hiresCard: {
@@ -135,6 +147,7 @@ const styles = StyleSheet.create({
   periodLabel: { color: palette.navy, fontSize: 16, fontWeight: '800' },
   chart: {
     flex: 1,
+    minHeight: CHART_MIN_HEIGHT,
     backgroundColor: palette.card,
     borderRadius: 12,
     borderWidth: 1,

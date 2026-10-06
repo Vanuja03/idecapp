@@ -16,6 +16,10 @@ export function canFinalize(role?: UserRole) {
   return role === UserRole.ADMIN || role === UserRole.MANAGER;
 }
 
+export function canViewVehicles(role?: UserRole) {
+  return role === UserRole.ADMIN || role === UserRole.MANAGER || role === UserRole.OPERATOR;
+}
+
 export function canManageVehicles(role?: UserRole) {
   return role === UserRole.ADMIN;
 }
