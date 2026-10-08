@@ -284,7 +284,7 @@ describe('Jobs', () => {
     expect(res.body.data.trucks).toEqual([{ vehicleNumber: 'ABC-1234', completed: 1 }]);
   });
 
-  it('lists lorries that are in a pending job on the given day', async () => {
+  it('lists lorries that are in a pending or ongoing job on the given day', async () => {
     const { Authorization } = await authHeader(UserRole.OPERATOR);
     const busy = await createVehicle('BUSY-1');
     await createVehicle('FREE-1');

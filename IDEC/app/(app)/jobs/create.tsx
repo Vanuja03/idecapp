@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { DateSelector } from '@/components/DateSelector';
 import { ErrorState } from '@/components/ErrorState';
 import { JobTypeDropdown } from '@/components/JobTypeDropdown';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { JobVehicleFields } from '@/components/JobVehicleFields';
 import { LoadingState } from '@/components/LoadingState';
 import { StatusDropdown } from '@/components/StatusDropdown';
@@ -72,7 +73,7 @@ export default function CreateJobScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <KeyboardAwareScrollView contentContainerStyle={styles.content}>
       {vehiclesQuery.isLoading || dayQuery.isLoading ? <LoadingState /> : null}
       {locked ? (
         <ErrorState title="This job cannot be edited because the day has been finalized." />
@@ -153,7 +154,7 @@ export default function CreateJobScreen() {
       <Snackbar visible={Boolean(snack)} onDismiss={() => setSnack(null)}>
         {snack}
       </Snackbar>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
