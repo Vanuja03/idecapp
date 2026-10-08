@@ -18,6 +18,8 @@ export const palette = {
   errorBg: '#FDECEC',
   info: '#175CD3',
   infoBg: '#E8F1FC',
+  ongoing: '#0284C7',
+  ongoingBg: '#E0F2FE',
 };
 
 export const Colors = {
@@ -78,6 +80,7 @@ export const paperDarkTheme = {
 
 export const statusTokens = {
   PENDING: { label: 'Pending', color: palette.warning, background: palette.warningBg },
+  ONGOING: { label: 'On going', color: palette.ongoing, background: palette.ongoingBg },
   COMPLETED: { label: 'Completed', color: palette.success, background: palette.successBg },
   CANCELED: { label: 'Canceled', color: palette.error, background: palette.errorBg },
 } as const;

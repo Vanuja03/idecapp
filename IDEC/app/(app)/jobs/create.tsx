@@ -5,13 +5,14 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { DateSelector } from '@/components/DateSelector';
 import { ErrorState } from '@/components/ErrorState';
+import { JobTypeDropdown } from '@/components/JobTypeDropdown';
 import { JobVehicleFields } from '@/components/JobVehicleFields';
 import { LoadingState } from '@/components/LoadingState';
 import { StatusDropdown } from '@/components/StatusDropdown';
 import { palette, spacing } from '@/constants/theme';
 import { useCreateJob, useDailyJobs, useVehicles, useVehiclesInJob } from '@/hooks/use-logistics';
 import { jobFormToPayload, jobSchema, JobForm } from '@/schemas/forms';
-import { JobStatus, VehicleSource } from '@/types';
+import { JobStatus, JobType, VehicleSource } from '@/types';
 import { todayBusinessDate } from '@/utils/dates';
 import { getErrorMessage, getFieldErrors } from '@/utils/errors';
 import { useAuth } from '@/store/auth';
@@ -37,6 +38,7 @@ export default function CreateJobScreen() {
     resolver: zodResolver(jobSchema),
     defaultValues: {
       jobDate: defaultDate,
+      jobType: JobType.IM,
       vehicleSource: VehicleSource.OWN,
       vehicleId: '',
       otherVehicleNumber: '',
@@ -88,6 +90,14 @@ export default function CreateJobScreen() {
         vehicles={vehiclesQuery.data ?? []}
         inJobVehicleIds={inJobQuery.data ?? []}
         disabled={locked}
+      />
+
+      <Controller
+        control={control}
+        name="jobType"
+        render={({ field: { value, onChange } }) => (
+          <JobTypeDropdown value={value} onChange={onChange} error={errors.jobType?.message} disabled={locked} />
+        )}
       />
 
       <Controller

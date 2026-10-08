@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Job, VehicleSource } from '@/types';
+import { Job, JobType, VehicleSource } from '@/types';
 import { formatDateTime, userName } from '@/utils/dates';
 import { StatusBadge } from '@/components/StatusBadge';
 import { palette, radius, spacing } from '@/constants/theme';
@@ -18,6 +18,9 @@ export function JobCard({ job, onPress }: Props) {
       <View style={styles.row}>
         <View style={styles.vehicleRow}>
           <Text style={styles.vehicle}>{job.vehicleNumberSnapshot}</Text>
+          <View style={styles.typeTag}>
+            <Text style={styles.typeTagText}>{job.jobType ?? JobType.IM}</Text>
+          </View>
           {isOther ? (
             <View style={styles.otherTag}>
               <Text style={styles.otherTagText}>Other lorry</Text>
@@ -47,6 +50,13 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   vehicleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
   vehicle: { fontSize: 18, fontWeight: '700', color: palette.text },
+  typeTag: {
+    backgroundColor: palette.infoBg,
+    borderRadius: radius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  typeTagText: { color: palette.navy, fontSize: 11, fontWeight: '800' },
   otherTag: {
     backgroundColor: '#FFF1E6',
     borderRadius: radius.sm,

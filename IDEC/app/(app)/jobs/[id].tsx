@@ -6,6 +6,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ErrorState } from '@/components/ErrorState';
+import { JobTypeDropdown } from '@/components/JobTypeDropdown';
 import { JobVehicleFields } from '@/components/JobVehicleFields';
 import { LoadingState } from '@/components/LoadingState';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -14,7 +15,7 @@ import { palette, spacing } from '@/constants/theme';
 import { useDailyJobs, useDeleteJob, useJob, useUpdateJob, useVehicles } from '@/hooks/use-logistics';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { jobFormToPayload, jobSchema, JobForm } from '@/schemas/forms';
-import { JobStatus, VehicleSource } from '@/types';
+import { JobStatus, JobType, VehicleSource } from '@/types';
 import { formatDateTime, userName } from '@/utils/dates';
 import { getErrorMessage } from '@/utils/errors';
 import { useAuth } from '@/store/auth';
@@ -34,6 +35,7 @@ export default function JobDetailScreen() {
     resolver: zodResolver(jobSchema),
     defaultValues: {
       jobDate: '',
+      jobType: JobType.IM,
       vehicleSource: VehicleSource.OWN,
       vehicleId: '',
       otherVehicleNumber: '',
@@ -49,6 +51,7 @@ export default function JobDetailScreen() {
     const isOther = job.vehicleSource === VehicleSource.OTHER;
     form.reset({
       jobDate: job.jobDate,
+      jobType: job.jobType ?? JobType.IM,
       vehicleSource: isOther ? VehicleSource.OTHER : VehicleSource.OWN,
       vehicleId: job.vehicleId ? String(job.vehicleId) : '',
       otherVehicleNumber: isOther ? job.vehicleNumberSnapshot : '',
@@ -110,6 +113,7 @@ export default function JobDetailScreen() {
           {jobQuery.data.vehicleSource === VehicleSource.OTHER ? ' (Other lorry)' : ''}
         </Text>
       ) : null}
+      {!canEdit ? <Text style={styles.date}>Type: {jobQuery.data.jobType ?? JobType.IM}</Text> : null}
 
       {canEdit ? (
         <JobVehicleFields
@@ -117,6 +121,16 @@ export default function JobDetailScreen() {
           errors={form.formState.errors}
           vehicles={vehiclesQuery.data ?? []}
           sourceLocked
+        />
+      ) : null}
+
+      {canEdit ? (
+        <Controller
+          control={form.control}
+          name="jobType"
+          render={({ field: { value, onChange } }) => (
+            <JobTypeDropdown value={value} onChange={onChange} error={form.formState.errors.jobType?.message} />
+          )}
         />
       ) : null}
 

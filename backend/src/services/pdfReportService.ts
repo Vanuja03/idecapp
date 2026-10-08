@@ -2,25 +2,23 @@ import PDFDocument from 'pdfkit';
 import { DailyJobControl } from '../models/DailyJobControl';
 import { Job } from '../models/Job';
 import { User } from '../models/User';
-import { DayStatus, JobStatus, VehicleSource } from '../types';
+import { DayStatus, JobStatus, JobType, VehicleSource } from '../types';
 import { AppError } from '../utils/AppError';
 import { assertBusinessDate, formatDateTimeInTimezone } from '../utils/dates';
 
-type PopulatedUser = { name?: string; username?: string } | null;
-
 const STATUS_COLORS: Record<JobStatus, string> = {
   PENDING: '#C98900',
+  ONGOING: '#0284C7',
   COMPLETED: '#1F7A4D',
   CANCELED: '#B42318',
 };
 
-function userLabel(ref: unknown): string {
-  if (!ref) return '—';
-  if (typeof ref === 'object' && ref !== null && 'name' in ref) {
-    return (ref as PopulatedUser)?.name ?? '—';
-  }
-  return '—';
-}
+const STATUS_LABELS: Record<JobStatus, string> = {
+  PENDING: 'PENDING',
+  ONGOING: 'ON GOING',
+  COMPLETED: 'COMPLETED',
+  CANCELED: 'CANCELED',
+};
 
 function formatDisplayDate(date: string): string {
   const [year, month, day] = date.split('-').map(Number);
@@ -44,9 +42,7 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
     );
   }
 
-  const jobs = await Job.find({ jobDate: date })
-    .populate('createdBy', 'name username')
-    .sort({ createdAt: 1 });
+  const jobs = await Job.find({ jobDate: date }).sort({ createdAt: 1 });
 
   let finalizedByName = '—';
   if (control.finalizedBy) {
@@ -57,6 +53,7 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
   const counts = {
     total: jobs.length,
     pending: jobs.filter((job) => job.status === 'PENDING').length,
+    ongoing: jobs.filter((job) => job.status === 'ONGOING').length,
     completed: jobs.filter((job) => job.status === 'COMPLETED').length,
     canceled: jobs.filter((job) => job.status === 'CANCELED').length,
   };
@@ -71,7 +68,7 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
 
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
-    doc.fillColor('#0F3D6E').fontSize(18).font('Helvetica-Bold').text('IDEC Logistics', { align: 'left' });
+    doc.fillColor('#0F3D6E').fontSize(18).font('Helvetica-Bold').text('IDEC Logistics & Trading', { align: 'left' });
     doc.moveDown(0.2);
     doc.fillColor('#12263A').fontSize(14).text('Daily Jobs Report');
     doc.moveDown(0.4);
@@ -82,17 +79,19 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
     doc.text(`Finalized at: ${control.finalizedAt ? formatDateTimeInTimezone(control.finalizedAt) : '—'}`);
     doc.moveDown(0.6);
     doc.fillColor('#12263A').text(
-      `Total: ${counts.total}   Pending: ${counts.pending}   Completed: ${counts.completed}   Canceled: ${counts.canceled}`,
+      `Total: ${counts.total}   Pending: ${counts.pending}   On going: ${counts.ongoing}   Completed: ${counts.completed}   Canceled: ${counts.canceled}`,
     );
     doc.moveDown(0.8);
 
     const columns = [
-      { key: 'no', label: '#', width: 28 },
-      { key: 'vehicle', label: 'Vehicle', width: 78 },
-      { key: 'destination', label: 'Destination', width: 150 },
-      { key: 'status', label: 'Status', width: 72 },
-      { key: 'createdBy', label: 'Created By', width: 90 },
-      { key: 'notes', label: 'Notes / Vendor', width: pageWidth - 28 - 78 - 150 - 72 - 90 },
+      { key: 'no', label: '#', width: 24 },
+      { key: 'vehicle', label: 'Vehicle', width: 74 },
+      { key: 'type', label: 'Type', width: 30 },
+      { key: 'destination', label: 'Destination', width: 105 },
+      { key: 'status', label: 'Status', width: 62 },
+      { key: 'createdAt', label: 'Created', width: 70 },
+      { key: 'updatedAt', label: 'Last updated', width: 70 },
+      { key: 'notes', label: 'Notes / Vendor', width: pageWidth - 24 - 74 - 30 - 105 - 62 - 70 - 70 },
     ] as const;
 
     const drawHeader = (y: number) => {
@@ -126,9 +125,11 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
         const values = [
           String(index + 1),
           isOther ? `${job.vehicleNumberSnapshot} (Other)` : job.vehicleNumberSnapshot,
+          job.jobType ?? JobType.IM,
           job.destination,
-          job.status,
-          userLabel(job.createdBy),
+          STATUS_LABELS[job.status] ?? job.status,
+          formatDateTimeInTimezone(job.createdAt),
+          formatDateTimeInTimezone(job.updatedAt),
           note ? (isOther ? `Vendor: ${note}` : note) : '—',
         ];
 

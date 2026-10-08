@@ -39,6 +39,37 @@ describe('Jobs', () => {
     expect(list.body.data.jobs).toHaveLength(1);
   });
 
+  it('defaults the job type to IM and allows EX', async () => {
+    const { Authorization } = await authHeader(UserRole.OPERATOR);
+    const vehicle = await createVehicle();
+    const base = { jobDate: '2026-08-11', vehicleId: vehicle._id.toString(), destination: 'Colombo', status: 'PENDING' };
+
+    const defaulted = await request(app).post('/api/jobs').set('Authorization', Authorization).send(base);
+    expect(defaulted.status).toBe(201);
+    expect(defaulted.body.data.job.jobType).toBe('IM');
+
+    const exported = await request(app)
+      .post('/api/jobs')
+      .set('Authorization', Authorization)
+      .send({ ...base, jobType: 'EX' });
+    expect(exported.status).toBe(201);
+    expect(exported.body.data.job.jobType).toBe('EX');
+
+    const updated = await request(app)
+      .put(`/api/jobs/${exported.body.data.job._id}`)
+      .set('Authorization', Authorization)
+      .send({ jobType: 'IM' });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.job.jobType).toBe('IM');
+
+    const invalid = await request(app)
+      .post('/api/jobs')
+      .set('Authorization', Authorization)
+      .send({ ...base, jobType: 'XX' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.errors.jobType).toBeDefined();
+  });
+
   it('updates a job while the day is open', async () => {
     const { Authorization } = await authHeader(UserRole.MANAGER);
     const vehicle = await createVehicle();
@@ -283,6 +314,20 @@ describe('Jobs', () => {
       .get('/api/vehicles/in-job?date=2026-08-12')
       .set('Authorization', Authorization);
     expect(nextDay.body.data.vehicleIds).toEqual([]);
+
+    const ongoing = await request(app)
+      .put(`/api/jobs/${created.body.data.job._id}`)
+      .set('Authorization', Authorization)
+      .send({ status: 'ONGOING' });
+    expect(ongoing.status).toBe(200);
+    expect(ongoing.body.data.job.status).toBe('ONGOING');
+    const whileOngoing = await request(app)
+      .get('/api/vehicles/in-job?date=2026-08-11')
+      .set('Authorization', Authorization);
+    expect(whileOngoing.body.data.vehicleIds).toEqual([busy._id.toString()]);
+
+    const day = await request(app).get('/api/daily-jobs/2026-08-11').set('Authorization', Authorization);
+    expect(day.body.data.counts.ongoing).toBe(1);
 
     await request(app)
       .put(`/api/jobs/${created.body.data.job._id}`)

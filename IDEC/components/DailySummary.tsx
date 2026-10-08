@@ -15,6 +15,7 @@ export function DailySummary({ day }: { day: DailyView }) {
       </View>
       <View style={styles.counts}>
         <Text style={styles.count}>Pending: {day.counts.pending}</Text>
+        <Text style={styles.count}>On going: {day.counts.ongoing ?? 0}</Text>
         <Text style={styles.count}>Completed: {day.counts.completed}</Text>
         <Text style={styles.count}>Canceled: {day.counts.canceled}</Text>
       </View>

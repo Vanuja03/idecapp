@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { JobStatus, UserRole, VehicleSource } from '../types';
+import { JobStatus, JobType, UserRole, VehicleSource } from '../types';
 
 export const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -60,6 +60,7 @@ export const idParamSchema = z.object({
 export const createJobSchema = z
   .object({
     jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    jobType: z.nativeEnum(JobType, { message: 'Type must be IM or EX' }).default(JobType.IM),
     vehicleSource: z.nativeEnum(VehicleSource).default(VehicleSource.OWN),
     vehicleId: z.string().optional(),
     otherVehicleNumber: z.string().trim().max(32, 'Lorry number is too long').optional(),
@@ -86,6 +87,7 @@ export const createJobSchema = z
 export const updateJobSchema = z
   .object({
     jobDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    jobType: z.nativeEnum(JobType, { message: 'Type must be IM or EX' }).optional(),
     vehicleSource: z.nativeEnum(VehicleSource).optional(),
     vehicleId: z.string().min(1).optional(),
     otherVehicleNumber: z.string().trim().min(1, 'Lorry number is required').max(32).optional(),

@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { JobStatus } from '@/types';
 import { palette, radius, spacing, statusTokens } from '@/constants/theme';
 
-const options: JobStatus[] = ['PENDING', 'COMPLETED', 'CANCELED'];
+const options: JobStatus[] = ['PENDING', 'ONGOING', 'COMPLETED', 'CANCELED'];
 
 type Props = {
   value: JobStatus;

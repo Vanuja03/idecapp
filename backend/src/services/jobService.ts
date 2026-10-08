@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Job } from '../models/Job';
 import { Vehicle } from '../models/Vehicle';
-import { JobStatus, VehicleSource } from '../types';
+import { JobStatus, JobType, VehicleSource } from '../types';
 import { AppError } from '../utils/AppError';
 import { assertBusinessDate } from '../utils/dates';
 import { assertDayIsOpen, getOrCreateDayControl } from './dailyJobService';
@@ -70,6 +70,7 @@ export async function getJobById(id: string) {
 export async function createJob(
   input: {
     jobDate: string;
+    jobType?: JobType;
     vehicleSource?: VehicleSource;
     vehicleId?: string;
     otherVehicleNumber?: string;
@@ -92,6 +93,7 @@ export async function createJob(
 
   return Job.create({
     jobDate,
+    jobType: input.jobType ?? JobType.IM,
     ...vehicleFields,
     destination: input.destination.trim(),
     status: input.status,
@@ -105,6 +107,7 @@ export async function updateJob(
   id: string,
   input: {
     jobDate?: string;
+    jobType?: JobType;
     vehicleSource?: VehicleSource;
     vehicleId?: string;
     otherVehicleNumber?: string;
@@ -145,6 +148,7 @@ export async function updateJob(
     job.vehicleNumberSnapshot = vehicleFields.vehicleNumberSnapshot;
   }
 
+  if (input.jobType !== undefined) job.jobType = input.jobType;
   if (input.destination !== undefined) job.destination = input.destination.trim();
   if (input.status !== undefined) job.status = input.status;
   if (input.notes !== undefined) job.notes = input.notes.trim();

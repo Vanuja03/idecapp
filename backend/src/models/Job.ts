@@ -1,8 +1,9 @@
 import mongoose, { Document, Model, Schema, Types } from 'mongoose';
-import { JobStatus, VehicleSource } from '../types';
+import { JobStatus, JobType, VehicleSource } from '../types';
 
 export interface JobDocument extends Document {
   jobDate: string;
+  jobType: JobType;
   vehicleSource: VehicleSource;
   vehicleId: Types.ObjectId | null;
   vehicleNumberSnapshot: string;
@@ -20,6 +21,12 @@ export interface JobDocument extends Document {
 const jobSchema = new Schema<JobDocument>(
   {
     jobDate: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
+    jobType: {
+      type: String,
+      required: true,
+      enum: Object.values(JobType),
+      default: JobType.IM,
+    },
     vehicleSource: {
       type: String,
       required: true,

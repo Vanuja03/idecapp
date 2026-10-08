@@ -9,6 +9,7 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const JobStatus = {
   PENDING: 'PENDING',
+  ONGOING: 'ONGOING',
   COMPLETED: 'COMPLETED',
   CANCELED: 'CANCELED',
 } as const;
@@ -21,6 +22,13 @@ export const VehicleSource = {
 } as const;
 
 export type VehicleSource = (typeof VehicleSource)[keyof typeof VehicleSource];
+
+export const JobType = {
+  IM: 'IM',
+  EX: 'EX',
+} as const;
+
+export type JobType = (typeof JobType)[keyof typeof JobType];
 
 export const DayStatus = {
   OPEN: 'OPEN',
@@ -55,6 +63,7 @@ export type JobUserRef = {
 export type Job = {
   _id: string;
   jobDate: string;
+  jobType?: JobType;
   vehicleSource?: VehicleSource;
   vehicleId: string | null;
   vehicleNumberSnapshot: string;
@@ -71,6 +80,7 @@ export type Job = {
 
 export type JobPayload = {
   jobDate: string;
+  jobType: JobType;
   vehicleSource: VehicleSource;
   vehicleId?: string;
   otherVehicleNumber?: string;
@@ -82,6 +92,7 @@ export type JobPayload = {
 export type DailyCounts = {
   total: number;
   pending: number;
+  ongoing?: number;
   completed: number;
   canceled: number;
 };

@@ -9,12 +9,12 @@ export async function listVehicles(activeOnly?: boolean) {
   return Vehicle.find(filter).sort({ vehicleNumber: 1 });
 }
 
-/** Company lorries with a PENDING job on the given day; every lorry is available again the next day. */
+/** Company lorries with a PENDING or ONGOING job on the given day; every lorry is available again the next day. */
 export async function listVehicleIdsInJob(date: string): Promise<string[]> {
   const jobDate = assertBusinessDate(date);
   const ids = await Job.distinct('vehicleId', {
     jobDate,
-    status: JobStatus.PENDING,
+    status: { $in: [JobStatus.PENDING, JobStatus.ONGOING] },
     vehicleId: { $ne: null },
   });
   return ids.map((id) => String(id));

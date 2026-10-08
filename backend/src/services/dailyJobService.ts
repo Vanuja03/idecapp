@@ -44,6 +44,7 @@ export async function getDailyView(date: string) {
   const counts = {
     total: jobs.length,
     pending: jobs.filter((job) => job.status === 'PENDING').length,
+    ongoing: jobs.filter((job) => job.status === 'ONGOING').length,
     completed: jobs.filter((job) => job.status === 'COMPLETED').length,
     canceled: jobs.filter((job) => job.status === 'CANCELED').length,
   };

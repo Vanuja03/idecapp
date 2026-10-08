@@ -11,6 +11,7 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const JobStatus = {
   PENDING: 'PENDING',
+  ONGOING: 'ONGOING',
   COMPLETED: 'COMPLETED',
   CANCELED: 'CANCELED',
 } as const;
@@ -23,6 +24,13 @@ export const VehicleSource = {
 } as const;
 
 export type VehicleSource = (typeof VehicleSource)[keyof typeof VehicleSource];
+
+export const JobType = {
+  IM: 'IM',
+  EX: 'EX',
+} as const;
+
+export type JobType = (typeof JobType)[keyof typeof JobType];
 
 export const DayStatus = {
   OPEN: 'OPEN',
