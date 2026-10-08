@@ -83,15 +83,24 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
     );
     doc.moveDown(0.8);
 
+    const CELL_PADDING = 8;
+    doc.font('Helvetica-Bold').fontSize(9);
+    const statusWidth =
+      Math.ceil(Math.max(...Object.values(STATUS_LABELS).map((label) => doc.widthOfString(label)))) +
+      CELL_PADDING +
+      4;
+    const fixedWidths = { no: 24, vehicle: 74, type: 30, status: statusWidth, createdAt: 70, updatedAt: 70, notes: 80 };
+    const destinationWidth = pageWidth - Object.values(fixedWidths).reduce((sum, width) => sum + width, 0);
+
     const columns = [
-      { key: 'no', label: '#', width: 24 },
-      { key: 'vehicle', label: 'Vehicle', width: 74 },
-      { key: 'type', label: 'Type', width: 30 },
-      { key: 'destination', label: 'Destination', width: 105 },
-      { key: 'status', label: 'Status', width: 62 },
-      { key: 'createdAt', label: 'Created', width: 70 },
-      { key: 'updatedAt', label: 'Last updated', width: 70 },
-      { key: 'notes', label: 'Notes / Vendor', width: pageWidth - 24 - 74 - 30 - 105 - 62 - 70 - 70 },
+      { key: 'no', label: '#', width: fixedWidths.no },
+      { key: 'vehicle', label: 'Vehicle', width: fixedWidths.vehicle },
+      { key: 'type', label: 'Type', width: fixedWidths.type },
+      { key: 'destination', label: 'Destination', width: destinationWidth },
+      { key: 'status', label: 'Status', width: fixedWidths.status },
+      { key: 'createdAt', label: 'Created', width: fixedWidths.createdAt },
+      { key: 'updatedAt', label: 'Last updated', width: fixedWidths.updatedAt },
+      { key: 'notes', label: 'Notes / Vendor', width: fixedWidths.notes },
     ] as const;
 
     const drawHeader = (y: number) => {
@@ -99,7 +108,7 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
       doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(9);
       let x = doc.page.margins.left + 4;
       for (const column of columns) {
-        doc.text(column.label, x, y + 6, { width: column.width - 8, ellipsis: true });
+        doc.text(column.label, x, y + 6, { width: column.width - CELL_PADDING, ellipsis: true });
         x += column.width;
       }
       return y + 22;
@@ -133,8 +142,11 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
           note ? (isOther ? `Vendor: ${note}` : note) : '—',
         ];
 
+        const cellFont = (key: (typeof columns)[number]['key']) => (key === 'status' ? 'Helvetica-Bold' : 'Helvetica');
+
+        doc.fontSize(9);
         const heights = columns.map((column, i) =>
-          doc.heightOfString(values[i], { width: column.width - 8 }),
+          doc.font(cellFont(column.key)).heightOfString(values[i], { width: column.width - CELL_PADDING }),
         );
         const rowHeight = Math.max(22, ...heights) + 10;
         ensureSpace(rowHeight);
@@ -146,12 +158,9 @@ export async function buildDailyJobsPdf(date: string): Promise<Buffer> {
         doc.fontSize(9);
         let x = doc.page.margins.left + 4;
         columns.forEach((column, i) => {
-          if (column.key === 'status') {
-            doc.fillColor(STATUS_COLORS[job.status] ?? '#12263A').font('Helvetica-Bold');
-          } else {
-            doc.fillColor('#12263A').font('Helvetica');
-          }
-          doc.text(values[i], x, y + 5, { width: column.width - 8 });
+          const color = column.key === 'status' ? (STATUS_COLORS[job.status] ?? '#12263A') : '#12263A';
+          doc.fillColor(color).font(cellFont(column.key));
+          doc.text(values[i], x, y + 5, { width: column.width - CELL_PADDING });
           x += column.width;
         });
 
